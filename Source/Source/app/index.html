@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Sreon</title>
+    <link rel="icon" href="assets/sreon-logo.png">
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="native.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="toolbar">
+      <button id="back" class="icon-button" aria-label="Back to results" disabled>←</button>
+      <button id="forward" class="icon-button" aria-label="Forward to website" disabled>→</button>
+      <button id="reload" class="icon-button" aria-label="Reload">↻</button>
+      <form id="address-form" autocomplete="off">
+        <label class="sr-only" for="address-input">Search or enter website</label>
+        <input id="address-input" type="text" placeholder="Search or enter website" spellcheck="false" autocomplete="off" maxlength="8192">
+      </form>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.3 14.1A8.5 8.5 0 0 1 9.9 3.7 8.5 8.5 0 1 0 20.3 14.1Z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+    </button>
+    </header>
+    <main id="app">
+      <div class="search-area">
+        <button id="home" class="brand" type="button" aria-label="Sreon start page">
+          <img src="assets/sreon-logo.png" width="112" height="112" alt="Sreon logo">
+          <span>Sreon</span>
+        </button>
+        <form id="search-form" role="search" autocomplete="off">
+          <label class="sr-only" for="search-input">Search</label>
+          <input id="search-input" type="search" placeholder="Search the web or enter a website" maxlength="500" spellcheck="false" autocomplete="off" autofocus required>
+          <button class="submit" type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+          </button>
+        </form>
+      </div>
+      <nav id="categories" role="tablist" aria-label="Search type">
+        <button role="tab" data-category="web" aria-selected="true">All</button>
+        <button role="tab" data-category="images" aria-selected="false">Images</button>
+        <button role="tab" data-category="photos" aria-selected="false">Photos</button>
+        <button role="tab" data-category="videos" aria-selected="false">Videos</button>
+      </nav>
+      <section id="results-section" aria-label="Search results" hidden>
+        <p id="status" role="status" aria-live="polite"></p>
+        <p id="notice" class="notice" hidden></p>
+        <aside id="overview" hidden>
+          <h2>Search overview</h2>
+          <p class="overview-label">Excerpts from the top results, with sources.</p>
+          <ul id="overview-items"></ul>
+        </aside>
+        <div id="results" aria-busy="false"></div>
+        <button id="retry" class="text-button" type="button" hidden>Try again</button>
+        <nav id="pagination" aria-label="Results pages" hidden>
+          <button id="previous" class="text-button" type="button">Previous</button>
+          <span id="page-number"></span>
+          <button id="next" class="text-button" type="button">Next</button>
+        </nav>
+      </section>
+    </main>
+  </body>
+</html>

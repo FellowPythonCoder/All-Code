@@ -1,0 +1,48 @@
+[package]
+name = "sreon"
+default-run = "sreon"
+version = "0.4.0"
+description = "Sreon native search app"
+authors = ["Sreon contributors"]
+edition = "2021"
+rust-version = "1.85"
+license = "AGPL-3.0-only"
+
+[lib]
+name = "sreon_core"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "sreon"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri"]
+api = []
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+scraper = "0.24"
+roxmltree = "0.20"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "brotli"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", optional = true, features = ["unstable"] }
+tokio = { version = "1", features = ["rt", "sync", "macros"] }
+url = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[[bin]]
+name = "sreon-api"
+path = "src/api.rs"
+required-features = ["api"]

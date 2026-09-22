@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sreon",
+  "version": "0.4.0",
+  "identifier": "com.opensreon.search",
+  "build": {
+    "beforeDevCommand": "node scripts/prepare-desktop.mjs",
+    "beforeBuildCommand": "node scripts/prepare-desktop.mjs",
+    "frontendDist": "../dist/desktop"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "capabilities": [
+        "main"
+      ],
+      "csp": "default-src 'self' customprotocol: asset:; script-src 'self'; style-src 'self'; img-src 'self' asset: https://upload.wikimedia.org https://thumb.wikimedia.org https://i.ytimg.com; font-src 'self' asset:; connect-src ipc: http://ipc.localhost https://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "A minimal native search app.",
+    "copyright": "Sreon contributors",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    },
+    "resources": {
+      "../../HOW-IT-WORKS.md": "HOW-IT-WORKS.md"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      }
+    }
+  }
+}

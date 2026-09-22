@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Only the local main webview can call native commands. The page webview shares the window but has no permissions.",
+  "permissions": [
+    "allow-search",
+    "allow-open-page",
+    "allow-navigate",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ],
+  "webviews": [
+    "main"
+  ]
+}
