@@ -45,7 +45,7 @@ def run(command):
     text = log.read_text(encoding="utf-8", errors="replace")
     print(text[-4000:], flush=True)
     if process.returncode:
-        for line in text.replace("\r", " ").replace("%", "/").splitlines()[-25:]:
+        for line in text.replace("\r", " ").replace("%", "/").splitlines()[-8:]:
             print("::error::" + line[:230], flush=True)
         raise SystemExit(process.returncode)
 
