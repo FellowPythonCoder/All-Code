@@ -45,8 +45,8 @@ def run(command):
     text = log.read_text(encoding="utf-8", errors="replace")
     print(text[-4000:], flush=True)
     if process.returncode:
-        snippet = text[-2000:].replace("\r", " ").replace("%", "/")
-        print("::error::" + snippet[:3900], flush=True)
+        for line in text.replace("\r", " ").replace("%", "/").splitlines()[-25:]:
+            print("::error::" + line[:230], flush=True)
         raise SystemExit(process.returncode)
 
 def pyinstaller():
@@ -71,7 +71,7 @@ def pyinstaller():
         "--exclude-module", "tkinter",
         "--exclude-module", "matplotlib",
         "--exclude-module", "numpy",
-        "app/main.py",
+        "run.py",
     ]
     if sys.platform == "darwin":
         icns = ROOT / "assets" / "icon.icns"
