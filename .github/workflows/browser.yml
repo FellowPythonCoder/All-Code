@@ -58,9 +58,14 @@ jobs:
       - name: Verify the PKG installs Sreon into Applications
         working-directory: Source/Browser
         run: |
-          sudo installer -pkg dist/Sreon-Installer.pkg -target /
-          test -d /Applications/Sreon.app
-          test -x /Applications/Sreon.app/Contents/MacOS/Sreon
+          set -o pipefail
+          LOG=$(mktemp)
+          if ! sudo installer -pkg dist/Sreon-Installer.pkg -target / 2>&1 | tee "$LOG"; then
+            tail -6 "$LOG" | cut -c1-220 | sed 's/^/::error::installer: /'
+            exit 1
+          fi
+          test -d /Applications/Sreon.app || { echo "::error::/Applications/Sreon.app missing after install"; exit 1; }
+          test -x /Applications/Sreon.app/Contents/MacOS/Sreon || { echo "::error::app binary missing after install"; exit 1; }
           echo "PKG installed Sreon.app to /Applications"
 
       - name: Upload macOS artifacts
