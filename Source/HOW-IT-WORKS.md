@@ -8,11 +8,11 @@ The start page keeps the original Sreon mark and the line **Search privately. Br
 
 Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
 
-| System | In the folder | Run |
+| System | In the folder | Install |
 | --- | --- | --- |
-| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. SmartScreen may warn because the build is not publisher-signed. |
-| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon to Applications. Gatekeeper may warn because the build is not notarized. |
-| Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
+| Windows 10/11, x64 | `Windows/Sreon-Setup.exe` | Run the setup wizard and follow the steps. Sreon appears in the Start Menu, and optionally on the desktop. SmartScreen may warn because the build is not publisher-signed. |
+| macOS 11+ | `macOS/Sreon.dmg` and `macOS/Sreon-Installer.pkg` | DMG: open it and drag Sreon to Applications. PKG: double-click and the macOS Installer puts Sreon in Applications. Gatekeeper may warn because the build is not notarized. |
+| Linux x86-64 | `Linux/Sreon-linux.deb` and `Sreon-linux.tar.gz` |deb: double-click or `sudo apt install ./Sreon-linux.deb` — Sreon is added to the applications menu. tar.gz: unpack and run `./Sreon`. |
 
 Internet is required for websites and live search. The app does not phone home to Sreon. Search queries go to the public sources used by the Rust engine only when you search. Website visits are ordinary HTTPS to that site.
 
@@ -67,9 +67,9 @@ A complete browser download is one `Sreon/` folder:
 
 ```text
 Sreon/
-  Windows/          Sreon.exe and Chromium runtime
-  macOS/            Sreon.dmg
-  Linux/            Sreon.AppImage and Sreon-linux.tar.gz
+  Windows/          Sreon-Setup.exe
+  macOS/            Sreon.dmg and Sreon-Installer.pkg
+  Linux/            Sreon-linux.deb and Sreon-linux.tar.gz
   Source/Browser/   desktop browser source
   Website/          website and hidden workspace
   HOW-IT-WORKS.md
@@ -94,7 +94,7 @@ python3 -m venv .venv
 .venv/bin/python tools/build.py
 ```
 
-`tools/build.py` compiles `sreon-api`, copies it to `engine/`, and freezes the desktop app with PyInstaller. On a Mac it also writes `dist/Sreon.dmg`. On Linux it writes `dist/Sreon-linux.tar.gz`. GitHub Actions attaches platform folders and packs them together.
+`tools/build.py` compiles `sreon-api`, copies it to `engine/`, and freezes the desktop app with PyInstaller. On a Mac it also writes `dist/Sreon.dmg` and `dist/Sreon-Installer.pkg`. On Linux it writes `dist/Sreon-linux.tar.gz` and `dist/Sreon-linux.deb`. GitHub Actions attaches the installers to releases. `python tools/build.py verify` launches the frozen app and proves it opens.
 
 The website is separate and is not required to use the installed browser.
 

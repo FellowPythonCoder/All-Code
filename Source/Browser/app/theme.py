@@ -28,8 +28,6 @@ def colors(settings):
             "panel": settings.get("panel", "#eee8f3"),
             "accent": settings.get("accent", "#694694"),
         }
-    if theme not in PRESETS and dark_mode(settings) and theme == "Custom":
-        pass
     return values
 
 def stylesheet(settings):

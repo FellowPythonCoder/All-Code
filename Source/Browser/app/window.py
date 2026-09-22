@@ -226,8 +226,8 @@ class BrowserWindow(QMainWindow):
 
     def _add(self, tab, title):
         self.tabs.append(tab)
-        index = self.tabbar.addTab(title)
         self.pages.addWidget(tab.container)
+        index = self.tabbar.addTab(title)
         self.tabbar.setCurrentIndex(index)
         return tab
 
