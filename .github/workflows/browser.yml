@@ -64,7 +64,14 @@ jobs:
             tail -6 "$LOG" | cut -c1-220 | sed 's/^/::error::installer: /'
             exit 1
           fi
-          test -d /Applications/Sreon.app || { echo "::error::/Applications/Sreon.app missing after install"; exit 1; }
+          test -d /Applications/Sreon.app || {
+            echo "::error::/Applications/Sreon.app missing after install"
+            pkgutil --pkg-info com.sreon.browser || true
+            pkgutil --files com.sreon.browser 2>/dev/null | head -5 || true
+            ls /Applications | head -25 || true
+            ls "$HOME/Applications" 2>/dev/null | head -10 || true
+            exit 1
+          }
           test -x /Applications/Sreon.app/Contents/MacOS/Sreon || { echo "::error::app binary missing after install"; exit 1; }
           echo "PKG installed Sreon.app to /Applications"
 
