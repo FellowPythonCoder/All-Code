@@ -103,10 +103,16 @@ test("the real page searches, renders, paginates, browses to sites, and switches
   assert.match(log[0], /en\.wikipedia\.org/);
 
   first.dispatchEvent(new dom.window.Event("click", { bubbles: true, cancelable: true }));
-  await waitFor(() => log.some((entry) => entry.startsWith("open:")), "site opened in a new tab");
-  const opened = log.find((entry) => entry.startsWith("open:"));
-  assert.equal(opened, "open:https://en.wikipedia.org/wiki/YouTube");
+  assert.equal(first.target, "_blank", "demo result links are native new-tab anchors");
+  assert.match(first.rel, /noopener/);
+  assert.equal(first.getAttribute("href"), "https://en.wikipedia.org/wiki/YouTube");
   assert.equal(document.getElementById("results-section").hidden, false, "results stay visible after opening a site");
+
+  document.getElementById("address-input").value = "https://en.wikipedia.org/wiki/Vimeo";
+  document.getElementById("address-form").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }));
+  await waitFor(() => log.some((entry) => entry.startsWith("open:")), "direct address opens via window.open");
+  const opened = log.find((entry) => entry.startsWith("open:"));
+  assert.equal(opened, "open:https://en.wikipedia.org/wiki/Vimeo");
 
   document.getElementById("next").dispatchEvent(new dom.window.Event("click", { bubbles: true, cancelable: true }));
   await waitFor(() => document.body.textContent.includes("Second page result"), "page 2 results");

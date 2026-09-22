@@ -69,6 +69,13 @@
     const link = document.createElement("a");
     link.href = url;
     link.textContent = title;
+    if (window.sreonRuntime.externalLinks) {
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.addEventListener("click", () => { lastWebsite = url; if (browsing || document.body.classList.contains("browsing")) address.value = url; });
+      link.addEventListener("auxclick", (event) => event.preventDefault());
+      return link;
+    }
     link.addEventListener("click", (event) => { event.preventDefault(); openPage(url); });
     link.addEventListener("auxclick", (event) => event.preventDefault());
     return link;
