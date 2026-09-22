@@ -16,7 +16,7 @@ def find_engine():
     for path in (
         ROOT / "engine" / name,
         ROOT / "search" / "target" / "release" / name,
-        ROOT.parent / "Extra" / "Source" / "src-tauri" / "target" / "release" / name,
+        ROOT.parent / "Source" / "src-tauri" / "target" / "release" / name,
     ):
         print("engine candidate", path, path.is_file(), flush=True)
         if path.is_file():
@@ -205,7 +205,7 @@ def main():
         return
     skip = "--skip-engine" in args
     if not skip:
-        run(["cargo", "build", "--release", "--manifest-path", str(ROOT.parent / "Extra" / "Source" / "src-tauri" / "Cargo.toml"), "--no-default-features", "--features", "api", "--bin", "sreon-api"])
+        run(["cargo", "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
     place_engine()
     pyinstaller()
     if sys.platform == "darwin":

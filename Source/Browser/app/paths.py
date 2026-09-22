@@ -32,7 +32,7 @@ def engine_binary():
         ROOT / "engine" / name,
         Path(__file__).resolve().parents[1] / "engine" / name,
         Path(__file__).resolve().parents[1] / "search" / "target" / "release" / name,
-        Path(__file__).resolve().parents[2] / "Extra" / "Source" / "src-tauri" / "target" / "release" / name,
+        Path(__file__).resolve().parents[2] / "Source" / "src-tauri" / "target" / "release" / name,
     ):
         if item.is_file():
             return item
