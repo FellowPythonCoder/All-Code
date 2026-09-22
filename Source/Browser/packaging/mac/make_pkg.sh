@@ -32,7 +32,6 @@ pkgbuild --root "$ROOT" \
   --version "$VERSION" \
   --install-location "/" \
   --analyze \
-  "$ROOT/Applications/Sreon.app" \
   "$SCRIPTS/comps.plist"
 
 plutil -replace BundleIsRelocatable -bool false "$SCRIPTS/comps.plist"
