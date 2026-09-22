@@ -26,6 +26,12 @@ MOUNT="$(hdiutil attach -readwrite -noverify -noautoopen "$DMG_RAW" | grep '/Vol
 VOLNAME="$(basename "$MOUNT")"
 sleep 2
 
+# Keep background daemons from holding the volume busy during layout.
+mkdir -p "$MOUNT/.fseventsd" 2>/dev/null || true
+: > "$MOUNT/.fseventsd/no_log" 2>/dev/null || true
+: > "$MOUNT/.metadata_never_index" 2>/dev/null || true
+sync
+
 # Place icons on the painted seats inside the installer window.
 # Finder coordinates are bottom-left origin; the window is 660x400 points.
 APPLESCRIPT=$(mktemp /tmp/sreon-dmg-XXXX.scpt)
@@ -56,10 +62,13 @@ SetFile -a C "$MOUNT" || true
 sync
 
 DETACHED=0
-for attempt in 1 2 3 4 5 6 7 8; do
+for attempt in $(seq 1 15); do
   if hdiutil detach "$MOUNT" >/dev/null 2>&1; then DETACHED=1; break; fi
+  if diskutil eject "$MOUNT" >/dev/null 2>&1; then DETACHED=1; break; fi
   if hdiutil detach "$MOUNT" -force >/dev/null 2>&1; then DETACHED=1; break; fi
-  sleep 3
+  if diskutil eject "$MOUNT" -force >/dev/null 2>&1; then DETACHED=1; break; fi
+  sync
+  sleep 4
 done
 if [ "$DETACHED" != "1" ]; then
   echo "::error::could not detach the installer image"
