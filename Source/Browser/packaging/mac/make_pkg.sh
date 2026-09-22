@@ -27,28 +27,11 @@ exit 0
 EOF
 chmod +x "$SCRIPTS/postinstall"
 
-cat > "$SCRIPTS/plist.xml" <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<array>
-  <dict>
-    <key>BundleHasStrictIdentifier</key><true/>
-    <key>BundleIsRelocatable</key><true/>
-    <key>BundleIsVersionChecked</key><false/>
-    <key>BundleOverwriteBehavior</key><string>Upgrade</string>
-    <key>ChildBundles</key><array/>
-  </dict>
-</array>
-</plist>
-EOF
-
 pkgbuild --root "$ROOT" \
   --identifier "$IDENTIFIER" \
   --version "$VERSION" \
   --install-location "/" \
   --scripts "$SCRIPTS" \
-  --component-plist "$SCRIPTS/plist.xml" \
   dist/sreon-component.pkg
 
 productbuild --package dist/sreon-component.pkg \
