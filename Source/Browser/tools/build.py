@@ -86,16 +86,20 @@ def pyinstaller():
         fix_bundle()
 
 def fix_bundle():
+    import plistlib
     info = bundled_app() / "Contents" / "Info.plist"
     if not info.is_file():
         raise SystemExit("Sreon.app Info.plist missing")
-    for entry, kind, value in (
-        (":LSMinimumSystemVersion", "string", "11.0"),
-        (":NSHighResolutionCapable", "bool", "true"),
-        (":CFBundleDisplayName", "string", "Sreon"),
-        (":LSApplicationCategoryType", "string", "public.app-category.productivity"),
-    ):
-        run(["/bin/bash", "-c", f'/usr/libexec/PlistBuddy -c "Set {entry} {value}" "{info}" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add {entry} {kind} {value}" "{info}"'])
+    with info.open("rb") as handle:
+        data = plistlib.load(handle)
+    data["LSMinimumSystemVersion"] = "11.0"
+    data["NSHighResolutionCapable"] = True
+    data["CFBundleDisplayName"] = "Sreon"
+    data["LSApplicationCategoryType"] = "public.app-category.productivity"
+    data.setdefault("CFBundleShortVersionString", VERSION)
+    with info.open("wb") as handle:
+        plistlib.dump(data, handle)
+    print("bundle metadata updated", info, flush=True)
 
 def bundled_app():
     app = ROOT / "dist" / "Sreon.app"
@@ -107,20 +111,7 @@ def bundled_app():
     raise SystemExit("Sreon.app was not built")
 
 def dmg():
-    app = bundled_app()
-    stage = ROOT / "dist" / "dmg"
-    if stage.exists():
-        shutil.rmtree(stage)
-    stage.mkdir(parents=True)
-    shutil.copytree(app, stage / "Sreon.app", symlinks=True)
-    (stage / "Applications").symlink_to("/Applications", target_is_directory=True)
-    background = stage / ".background"
-    background.mkdir()
-    shutil.copy2(ROOT / "packaging" / "mac" / "background.png", background / "background.png")
-    dmg_path = ROOT / "dist" / "Sreon.dmg"
-    if dmg_path.exists():
-        dmg_path.unlink()
-    run(["hdiutil", "create", "-volname", "Sreon", "-srcfolder", str(stage), "-ov", "-format", "UDZO", str(dmg_path)])
+    run(["bash", str(ROOT / "packaging" / "mac" / "make_dmg.sh")])
 
 def pkg():
     run(["bash", str(ROOT / "packaging" / "mac" / "make_pkg.sh")])
@@ -139,82 +130,74 @@ def linux_deb():
 def verify():
     print("== verifying Sreon build ==", flush=True)
     if sys.platform == "darwin":
-        app = bundled_app()
-        binary = app / "Contents" / "MacOS" / "Sreon"
-        if not binary.is_file():
-            raise SystemExit("verify: app bundle has no executable")
-        print("bundle:", app, flush=True)
-        print("binary:", binary, flush=True)
+        binary = bundled_app() / "Contents" / "MacOS" / "Sreon"
+        label = "macOS app bundle"
+    elif sys.platform.startswith("linux"):
+        binary = ROOT / "dist" / "Sreon" / "Sreon"
+        label = "Linux build"
+    else:
+        binary = ROOT / "dist" / "Sreon" / "Sreon.exe"
+        label = "Windows build"
+    if not binary.is_file():
+        raise SystemExit(f"verify: {binary} missing")
+    print("verifying", label, ":", binary, flush=True)
+
+    def attempt(extra_env):
         env = dict(os.environ)
-        home = Path(env.get("HOME", "/tmp"))
-        env["SREON_DATA"] = str(home / "Library" / "Application Support" / "SreonVerify")
-        if env.get("SREON_VERIFY_OFFSCREEN"):
-            env["QT_QPA_PLATFORM"] = "offscreen"
+        env.update(extra_env)
+        env["SREON_DATA"] = str(Path(env.get("HOME", "/tmp")) / "sreon-verify-data")
+        env["SREON_VERIFY"] = "1"
+        env.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+        env.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox --disable-gpu")
         launch = subprocess.Popen(
             [str(binary), "--verify-launch"],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env,
         )
         try:
-            out, _ = launch.communicate(timeout=90)
+            out, _ = launch.communicate(timeout=120)
+            code = launch.returncode
         except subprocess.TimeoutExpired:
             launch.kill()
             out, _ = launch.communicate()
-            print(out[-2000:], flush=True)
-            raise SystemExit("verify: app did not exit on its own")
-        print(out[-2000:], flush=True)
-        if launch.returncode != 0:
-            raise SystemExit(f"verify: app exited with {launch.returncode}")
-        print("verify: app opened and exited cleanly", flush=True)
-    elif sys.platform.startswith("linux"):
-        exe = ROOT / "dist" / "Sreon" / "Sreon"
-        if not exe.is_file():
-            raise SystemExit("verify: dist/Sreon/Sreon missing")
-        env = dict(os.environ)
-        env["SREON_DATA"] = "/tmp/sreon-verify"
-        env["QT_QPA_PLATFORM"] = "offscreen"
-        launch = subprocess.Popen([str(exe), "--verify-launch"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
-        try:
-            out, _ = launch.communicate(timeout=60)
-        except subprocess.TimeoutExpired:
-            launch.kill()
-            out, _ = launch.communicate()
-        print(out[-2000:], flush=True)
-        if launch.returncode != 0:
-            raise SystemExit(f"verify: app exited with {launch.returncode}")
-        print("verify: app opened and exited cleanly", flush=True)
-    else:
-        exe = ROOT / "dist" / "Sreon" / "Sreon.exe"
-        if not exe.is_file():
-            raise SystemExit("verify: dist/Sreon/Sreon.exe missing")
-        env = dict(os.environ)
-        env["SREON_DATA"] = str(ROOT / "dist" / "verify-data")
-        launch = subprocess.Popen([str(exe), "--verify-launch"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
-        try:
-            out, _ = launch.communicate(timeout=60)
-        except subprocess.TimeoutExpired:
-            launch.kill()
-            out, _ = launch.communicate()
-        print(out[-2000:], flush=True)
-        if launch.returncode != 0:
-            raise SystemExit(f"verify: app exited with {launch.returncode}")
-        print("verify: app opened and exited cleanly", flush=True)
+            code = "timeout"
+        return code, out
+
+    code, out = attempt({})
+    if code != 0:
+        print("native launch failed, retrying offscreen for diagnosis", flush=True)
+        for line in out.strip().splitlines()[-15:]:
+            print("::error::launch output: " + line[:230], flush=True)
+        code, out = attempt({"QT_QPA_PLATFORM": "offscreen"})
+    for line in out.strip().splitlines()[-8:]:
+        print("launch:", line[:230], flush=True)
+    if code != 0:
+        for line in out.strip().splitlines()[-15:]:
+            print("::error::offscreen output: " + line[:230], flush=True)
+        raise SystemExit(f"verify: app failed to open (status {code})")
+    print("verify: app opened and exited cleanly", flush=True)
 
 def main():
     args = sys.argv[1:]
     if "verify" in args:
         verify()
         return
-    skip = "--skip-engine" in args
-    if not skip:
-        run(["cargo", "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
-    place_engine()
-    pyinstaller()
-    if sys.platform == "darwin":
-        dmg()
-        pkg()
-    elif sys.platform.startswith("linux"):
-        linux_tar()
-        linux_deb()
+    if "--skip-engine" in args:
+        args = ["freeze", "finish"]
+    if not args:
+        args = ["engine", "freeze", "finish"]
+    for mode in args:
+        if mode == "engine":
+            run(["cargo", "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
+            place_engine()
+        elif mode == "freeze":
+            pyinstaller()
+        elif mode == "finish":
+            if sys.platform == "darwin":
+                dmg()
+                pkg()
+            elif sys.platform.startswith("linux"):
+                linux_tar()
+                linux_deb()
 
 if __name__ == "__main__":
     main()

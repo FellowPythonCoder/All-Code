@@ -28,9 +28,17 @@ jobs:
         working-directory: Source/Browser
         run: python -m pytest tests -q
 
-      - name: Build engine, app, DMG and PKG
+      - name: Build the search engine
         working-directory: Source/Browser
-        run: python tools/build.py
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
+
+      - name: Build DMG and PKG installers
+        working-directory: Source/Browser
+        run: python tools/build.py finish
 
       - name: Verify the app opens
         working-directory: Source/Browser
@@ -80,9 +88,13 @@ jobs:
         working-directory: Source/Browser
         run: python -m pytest tests -q
 
-      - name: Build engine and app
+      - name: Build the search engine
         working-directory: Source/Browser
-        run: python tools/build.py
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
 
       - name: Verify the app opens
         working-directory: Source/Browser
@@ -114,10 +126,10 @@ jobs:
       - name: Install Qt runtime dependencies
         run: |
           sudo apt-get update
-          for pkg in libasound2 libasound2t64; do
-            if apt-cache show "$pkg" >/dev/null 2>&1; then SOUND="$pkg"; break; fi
-          done
-          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libglib2.0-0 libnss3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 ${SOUND:-libasound2t64} libxtst6 libxkbfile1 libgbm1 xvfb
+          pick() { for p in "$@"; do if apt-cache show "$p" >/dev/null 2>&1; then echo "$p"; return; fi; done; echo "$1"; }
+          SOUND=$(pick libasound2 libasound2t64)
+          GLIB=$(pick libglib2.0-0 libglib2.0-0t64)
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 "$GLIB" libnss3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 "$SOUND" libxtst6 libxkbfile1 libgbm1 xvfb
 
       - uses: actions/setup-python@v5
         with:
@@ -130,9 +142,17 @@ jobs:
         working-directory: Source/Browser
         run: python -m pytest tests -q
 
-      - name: Build engine, tarball and deb
+      - name: Build the search engine
         working-directory: Source/Browser
-        run: python tools/build.py
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
+
+      - name: Build tarball and deb
+        working-directory: Source/Browser
+        run: python tools/build.py finish
 
       - name: Verify the app opens
         working-directory: Source/Browser

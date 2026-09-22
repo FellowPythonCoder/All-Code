@@ -17,17 +17,18 @@ cp -R "$APP" "$STAGE/Sreon.app"
 ln -s /Applications "$STAGE/Applications"
 
 # Branded volume icon (visible in the DMG window title bar and Finder sidebar)
-mkdir -p "$STAGE/.VolumeIcon.icns"
 cp assets/icon.icns "$STAGE/.VolumeIcon.icns"
 
 # Installer window background
 mkdir -p "$STAGE/.background"
 cp packaging/mac/background.png "$STAGE/.background/background.png"
 
-hdiutil create -volname "Sreon" -srcfolder "$STAGE" -ov -format UDRW -size 640m "$DMG_RAW"
+SIZE_MB=$(( $(du -sm "$STAGE" | cut -f1) + 140 ))
+hdiutil create -volname "Sreon" -srcfolder "$STAGE" -ov -format UDRW -size "${SIZE_MB}m" "$DMG_RAW"
 MOUNT="$(hdiutil attach -readwrite -noverify -noautoopen "$DMG_RAW" | grep '/Volumes/Sreon' | sed 's/[[:space:]]*$//;s/^.*\(\/Volumes\/Sreon\).*$/\1/')"
 
-# Place icons on a grid inside the installer window.
+# Place icons on the painted seats inside the installer window.
+# Finder coordinates are bottom-left origin; the window is 660x400 points.
 APPLESCRIPT=$(cat <<'EOS'
 on run argv
   tell application "Finder"
@@ -40,8 +41,8 @@ on run argv
       set viewpoint size of icon view options of container window to {96, 96}
       set arrangement of icon view options of container window to not arranged
       set background picture of icon view options of container window to file ".background:background.png"
-      set position of item "Sreon.app" of container window to {165, 235}
-      set position of item "Applications" of container window to {495, 235}
+      set position of item "Sreon.app" of container window to {165, 69}
+      set position of item "Applications" of container window to {495, 69}
       set position of item ".VolumeIcon.icns" of container window to {900, 900}
       update without registering applications
       delay 2
@@ -51,9 +52,9 @@ on run argv
 end run
 EOS
 )
-echo "$APPLESCRIPT" | osascript - "$MOUNT" || true
+echo "$APPLESCRIPT" | osascript - "$MOUNT" || echo "DMG icon layout skipped (osascript unavailable)"
 
-SetFile -a C "$MOUNT/.VolumeIcon.icns" || true
+SetFile -a C "$MOUNT" || true
 touch "$MOUNT/.metadata"
 sync
 hdiutil detach "$MOUNT" -force || hdiutil detach "$MOUNT" || true
