@@ -66,10 +66,10 @@ jobs:
           fi
           test -d /Applications/Sreon.app || {
             echo "::error::/Applications/Sreon.app missing after install"
-            pkgutil --pkg-info com.sreon.browser || true
-            pkgutil --files com.sreon.browser 2>/dev/null | head -5 || true
-            ls /Applications | head -25 || true
-            ls "$HOME/Applications" 2>/dev/null | head -10 || true
+            pkgutil --pkg-info com.sreon.browser 2>&1 | sed 's/^/::error::info: /' | cut -c1-220
+            pkgutil --files com.sreon.browser 2>/dev/null | head -4 | sed 's/^/::error::payload: /' | cut -c1-220
+            ls /Applications | grep -i sreon | sed 's/^/::error::appshome: /' || echo "::error::appshome: no Sreon in /Applications"
+            ls "$HOME/Applications" 2>/dev/null | grep -i sreon | sed 's/^/::error::userappshome: /' || echo "::error::userappshome: no Sreon in ~/Applications"
             exit 1
           }
           test -x /Applications/Sreon.app/Contents/MacOS/Sreon || { echo "::error::app binary missing after install"; exit 1; }
