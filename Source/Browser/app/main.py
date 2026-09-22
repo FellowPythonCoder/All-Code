@@ -80,7 +80,9 @@ def main():
         QTimer.singleShot(1200, app.quit)
         app.exec()
         session.close()
-        print("Sreon window opened", flush=True)
+        if sys.stdout:
+            sys.stdout.write("Sreon window opened\n")
+            sys.stdout.flush()
         raise SystemExit(0)
     raise SystemExit(app.exec())
 

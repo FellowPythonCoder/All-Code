@@ -114,7 +114,10 @@ jobs:
       - name: Install Qt runtime dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libglib2.0-0 libnss3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libasound2 libxtst6 libxkbfile1 libgbm1 xvfb
+          for pkg in libasound2 libasound2t64; do
+            if apt-cache show "$pkg" >/dev/null 2>&1; then SOUND="$pkg"; break; fi
+          done
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libglib2.0-0 libnss3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 ${SOUND:-libasound2t64} libxtst6 libxkbfile1 libgbm1 xvfb
 
       - uses: actions/setup-python@v5
         with:
@@ -145,17 +148,44 @@ jobs:
             Source/Browser/dist/Sreon-linux.tar.gz
             Source/Browser/dist/Sreon-linux.deb
 
-  release:
-    name: Attach installers to the release
+  bundle:
+    name: Bundle everything into Sreon.zip
     needs: [macos, windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble the delivery folder
+        run: |
+          mkdir -p bundle/Windows bundle/macOS bundle/Linux
+          cp artifacts/windows/* bundle/Windows/
+          cp artifacts/macos/* bundle/macOS/
+          cp artifacts/linux/* bundle/Linux/
+          cp -R Source bundle/Source
+          rm -rf bundle/Source/Browser/dist bundle/Source/Browser/build bundle/Source/Browser/engine bundle/Source/Browser/freeze.log
+          cp Source/HOW-IT-WORKS.md bundle/
+          cd bundle && zip -qr ../Sreon.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sreon-zip
+          path: Sreon.zip
+
+  release:
+    name: Attach Sreon.zip to the release
+    needs: bundle
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
-          merge-multiple: true
-          path: installers
+          name: Sreon-zip
+          path: .
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: installers/*
+          files: Sreon.zip

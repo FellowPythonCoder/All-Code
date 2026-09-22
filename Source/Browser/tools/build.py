@@ -86,15 +86,16 @@ def pyinstaller():
         fix_bundle()
 
 def fix_bundle():
-    info = ROOT / "dist" / "Sreon.app" / "Contents" / "Info.plist"
-    if not info.is_file():
-        info = ROOT / "dist" / "Sreon" / "Sreon.app" / "Contents" / "Info.plist"
+    info = bundled_app() / "Contents" / "Info.plist"
     if not info.is_file():
         raise SystemExit("Sreon.app Info.plist missing")
-    run(["/usr/libexec/PlistBuddy", "-c", "Add :LSMinimumSystemVersion string 11.0", str(info)])
-    run(["/usr/libexec/PlistBuddy", "-c", "Add :NSHighResolutionCapable bool true", str(info)])
-    run(["/usr/libexec/PlistBuddy", "-c", "Add :CFBundleDisplayName string Sreon", str(info)])
-    run(["/usr/libexec/PlistBuddy", "-c", "Add :LSApplicationCategoryType string public.app-category.productivity", str(info)])
+    for entry, kind, value in (
+        (":LSMinimumSystemVersion", "string", "11.0"),
+        (":NSHighResolutionCapable", "bool", "true"),
+        (":CFBundleDisplayName", "string", "Sreon"),
+        (":LSApplicationCategoryType", "string", "public.app-category.productivity"),
+    ):
+        run(["/bin/bash", "-c", f'/usr/libexec/PlistBuddy -c "Set {entry} {value}" "{info}" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add {entry} {kind} {value}" "{info}"'])
 
 def bundled_app():
     app = ROOT / "dist" / "Sreon.app"
