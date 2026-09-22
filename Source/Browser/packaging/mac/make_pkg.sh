@@ -31,7 +31,20 @@ pkgbuild --root "$ROOT" \
   --identifier "$IDENTIFIER" \
   --version "$VERSION" \
   --install-location "/" \
+  --analyze \
+  "$ROOT/Applications/Sreon.app" \
+  "$SCRIPTS/comps.plist"
+
+plutil -replace BundleIsRelocatable -bool false "$SCRIPTS/comps.plist"
+plutil -replace BundleIsVersionChecked -bool false "$SCRIPTS/comps.plist"
+plutil -replace BundleOverwriteBehavior -string Upgrade "$SCRIPTS/comps.plist"
+
+pkgbuild --root "$ROOT" \
+  --identifier "$IDENTIFIER" \
+  --version "$VERSION" \
+  --install-location "/" \
   --scripts "$SCRIPTS" \
+  --component-plist "$SCRIPTS/comps.plist" \
   dist/sreon-component.pkg
 
 productbuild --package dist/sreon-component.pkg \
