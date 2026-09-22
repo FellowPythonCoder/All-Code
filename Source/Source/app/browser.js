@@ -138,8 +138,7 @@
       externalLinks: true,
       search,
       openPage: (url) => {
-        const opened = window.open(url, "_blank", "noopener");
-        if (!opened) throw new Error("Allow pop-ups for this page, or the site opens in this tab.");
+        window.open(url, "_blank", "noopener");
         return Promise.resolve();
       },
       navigate: () => Promise.resolve(),
