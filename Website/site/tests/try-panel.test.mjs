@@ -3,8 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import jsdom from 'jsdom';
-const { JSDOM } = jsdom;
+let JSDOM;
+try {
+  ({ JSDOM } = await import('jsdom'));
+} catch {
+  console.log('# skip: this DOM test needs the jsdom dev dependency (npm ci)');
+}
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -61,7 +65,7 @@ async function waitFor(check, label) {
 
 let document;
 
-test('on the real opensreon.com page the Try panel searches YouTube and All with no backend', async () => {
+test('on the real opensreon.com page the Try panel searches YouTube and All with no backend', { skip: !JSDOM }, async () => {
   const dom = await boot();
   document = dom.window.document;
 
