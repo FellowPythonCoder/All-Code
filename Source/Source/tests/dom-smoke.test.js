@@ -1,8 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { JSDOM } from "jsdom";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+
+let JSDOM;
+try {
+  ({ JSDOM } = await import("jsdom"));
+} catch {
+  console.log("# skip: dom end-to-end needs the jsdom dev dependency (npm ci)");
+}
+
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..", "app");
 
@@ -82,7 +89,7 @@ async function waitFor(check, label) {
   }
 }
 
-test("the real page searches, renders, paginates, browses to sites, and switches to Commons images", async () => {
+test("the real page searches, renders, paginates, browses to sites, and switches to Commons images", { skip: !JSDOM }, async () => {
   const log = [];
   const dom = await boot(log);
   const document = dom.window.document;
