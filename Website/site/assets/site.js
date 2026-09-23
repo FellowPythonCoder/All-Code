@@ -59,13 +59,15 @@ function render(item) {
 function renderEngineRow(item) {
   const parsed = safeLink(item.url);
   if (!parsed || !item.title) return 0;
-  return results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title, content: item.content || '', thumbnail: null }));
+  results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title, content: item.content || '', thumbnail: null }));
+  return 1;
 }
 
 function renderLocalRow(item) {
   const parsed = safeLink(item.url);
   if (!parsed) return 0;
-  return results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title || parsed.hostname, content: item.content || '', thumbnail: item.thumbnail || null }));
+  results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title || parsed.hostname, content: item.content || '', thumbnail: item.thumbnail || null }));
+  return 1;
 }
 
 async function search(append = false) {

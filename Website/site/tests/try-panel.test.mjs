@@ -96,3 +96,47 @@ test('on the real opensreon.com page the Try panel searches YouTube and All with
   assert.equal(web.target, '_blank');
   dom.window.close();
 });
+
+test('with a connected Rust engine the panel uses /api/search and skips the demo runtime', async () => {
+  const ENGINE = { results: [{ title: 'Engine result', url: 'https://example.org/engine', content: 'From the Rust engine' }], nextCursor: null, notice: '', cached: false };
+  const seen = [];
+  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  const dom = new JSDOM(html, {
+    runScripts: 'outside-only',
+    url: 'http://localhost/',
+    pretendToBeVisual: true,
+    beforeParse(window) {
+      window.fetch = (url) => {
+        seen.push(String(url));
+        if (String(url).includes('/api/search')) return Promise.resolve({ ok: true, status: 200, json: async () => ENGINE });
+        if (String(url).includes('/api/health')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ ready: true, engine: 'rust' }) });
+        throw new Error('unexpected fetch ' + url);
+      };
+      window.__runtimeReady = import('file://' + join(ROOT, 'site/assets/runtime.js')).then((module) => {
+        window.SreonSiteRuntime = { createRuntime: () => module.createRuntime({ fetchImpl: () => { throw new Error('demo runtime must not be used'); } }) };
+      });
+    },
+  });
+  await dom.window.__runtimeReady;
+  dom.window.eval(readFileSync(join(ROOT, 'site/assets/theme.js'), 'utf8'));
+  dom.window.eval(readFileSync(join(ROOT, 'site/assets/site.js'), 'utf8'));
+  document = dom.window.document;
+  await new Promise((r) => setTimeout(r, 40));
+  assert.match(document.getElementById('search-status').textContent, /Connected to the Rust search engine/);
+  document.getElementById('query').value = 'curiosity';
+  document.getElementById('search-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+  const limit = Date.now() + 5000;
+  for (;;) {
+    const link = document.querySelector('#results article.result a');
+    if (link) {
+      assert.equal(link.href, 'https://example.org/engine');
+      assert.equal(link.target, '_blank');
+      assert.match(document.getElementById('search-status').textContent, /results for “curiosity”/);
+      assert.ok(seen.some((entry) => entry.includes('/api/search')), 'the engine endpoint was used');
+      break;
+    }
+    if (Date.now() > limit) throw new Error('engine results never rendered');
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  dom.window.close();
+});
