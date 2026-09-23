@@ -97,7 +97,7 @@ test('on the real opensreon.com page the Try panel searches YouTube and All with
   dom.window.close();
 });
 
-test('with a connected Rust engine the panel uses /api/search and skips the demo runtime', async () => {
+test('with a connected Rust engine the panel uses /api/search and skips the demo runtime', { skip: !JSDOM }, async () => {
   const ENGINE = { results: [{ title: 'Engine result', url: 'https://example.org/engine', content: 'From the Rust engine' }], nextCursor: null, notice: '', cached: false };
   const seen = [];
   const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
