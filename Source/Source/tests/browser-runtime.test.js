@@ -119,3 +119,51 @@ test("browser runtime rejects failed HTTP and unreadable JSON", async () => {
   const broken = createRuntime({ fetchImpl: async () => ({ ok: true, json: async () => { throw new Error("bad"); } }) });
   await assert.rejects(broken.search("x"), /could not be read/);
 });
+
+const PIPED_PAGE = {
+  items: [
+    { url: "/watch?v=abc123", title: "A video about birds", thumbnail: "https://pipedproxy.example/bird.jpg", uploaderName: "Bird Channel", duration: 214, views: 250000 },
+  ],
+  nextpage: "TOKEN-1",
+};
+const INVIDIOUS_PAGE = [
+  { videoId: "inv456", title: "Invidious bird video", author: "Someone", lengthSeconds: 95, viewCount: 4200, videoThumbnails: [{ url: "https://inv.example/thumb.jpg" }] },
+];
+
+test("browser runtime returns real YouTube videos via Piped and continues on the same host", async () => {
+  const calls = [];
+  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return jsonResponder(PIPED_PAGE)(url); } });
+  const data = await runtime.search("birds", "videos", null);
+  assert.equal(data.results[0].url, "https://www.youtube.com/watch?v=abc123");
+  assert.match(data.results[0].content, /Bird Channel/);
+  assert.match(data.results[0].content, /4 min/);
+  assert.match(data.results[0].content, /250K views/);
+  assert.equal(data.results[0].credit, "YouTube");
+  assert.deepEqual(JSON.parse(data.nextCursor), { i: 0, p: "TOKEN-1" });
+  assert.match(data.notice, /Piped/);
+  await runtime.search("birds", "videos", data.nextCursor);
+  assert.match(calls[1], /pipedapi\.kavin\.rocks\/search\?q=birds&filter=videos&nextpage=TOKEN-1/);
+});
+
+test("browser runtime falls back from dead Piped hosts to Invidious, then to Commons", async () => {
+  const runtime = createRuntime({ fetchImpl: async (url) => {
+    if (String(url).includes("invidious.nerdvpn.de")) return jsonResponder(INVIDIOUS_PAGE)(url);
+    if (String(url).includes("commons.wikimedia.org")) return jsonResponder({ query: { pages: { v: COMMONS_PAGE("Clip.webm", "video/webm") } }, continue: { gsroffset: 30 } })(url);
+    throw new Error("down");
+  } });
+  const data = await runtime.search("birds", "videos", null);
+  assert.equal(data.results[0].url, "https://www.youtube.com/watch?v=inv456");
+  const offline = createRuntime({ fetchImpl: async (url) => {
+    if (String(url).includes("commons.wikimedia.org")) return jsonResponder({ query: { pages: { v: COMMONS_PAGE("Clip.webm", "video/webm") } }, continue: { gsroffset: 30 } })(url);
+    throw new Error("down");
+  } });
+  const fallback = await offline.search("birds", "videos", null);
+  assert.equal(fallback.results[0].title, "Clip.webm");
+  assert.match(fallback.notice, /Commons/);
+});
+
+test("browser runtime wraps total outage in a friendly error", async () => {
+  const runtime = createRuntime({ fetchImpl: async () => { throw new Error("down"); } });
+  await assert.rejects(runtime.search("birds", "videos"), /unreachable right now/);
+  await assert.rejects(runtime.search("birds", "images"), /unreachable right now/);
+});
