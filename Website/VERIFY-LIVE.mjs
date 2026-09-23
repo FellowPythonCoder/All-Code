@@ -11,12 +11,15 @@ const checks = [
       page.includes("site/assets/runtime.js") && "runtime module referenced",
       page.includes('data-kind="videos"') && "YouTube chip present",
       page.includes('data-query=') && "suggestions present",
+      page.includes("SearXNG") && "full-web search described on the page",
     ];
   }],
   ["runtime module", async () => {
     const code = await (await fetch(join("site/assets/runtime.js"), { redirect: "follow" })).text();
     return [
       code.includes("createRuntime") && "createRuntime exported",
+      code.includes("searx.be") && "SearXNG full-web sources present",
+      code.includes("format=json") && "SearXNG JSON API used",
       code.includes("pipedapi") && "YouTube Piped sources present",
       code.includes("commons.wikimedia.org") && "Commons source present",
       code.includes("globalThis.SreonSiteRuntime") && "global registration present",
@@ -43,5 +46,5 @@ for (const [name, run] of checks) {
     console.log(`FAIL  ${name}: ${error.message}`);
   }
 }
-console.log(ok ? "\nDeployed site looks correct — open it and search YouTube." : "\nSite is missing the fix — re-check the uploaded files.");
+console.log(ok ? "\nDeployed site looks correct — open it and search the web and YouTube." : "\nSite is missing the fix — re-check the uploaded files.");
 process.exit(ok ? 0 : 1);

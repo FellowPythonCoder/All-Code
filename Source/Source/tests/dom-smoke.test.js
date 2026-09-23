@@ -107,7 +107,8 @@ test("the real page searches, renders, paginates, browses to sites, and switches
   assert.match(document.getElementById("notice").textContent, /Wikipedia/);
   assert.equal(document.getElementById("overview").hidden, false);
   assert.ok(document.querySelectorAll("#overview-items li").length >= 1, "overview entries render");
-  assert.match(log[0], /en\.wikipedia\.org/);
+  assert.match(log[0], /searx\.be\/search\?q=video&format=json/, "full-web SearXNG layer is queried first");
+  assert.ok(log.some((entry) => entry.includes("en.wikipedia.org")), "wikipedia serves the page after searx returns nothing");
 
   first.dispatchEvent(new dom.window.Event("click", { bubbles: true, cancelable: true }));
   assert.equal(first.target, "_blank", "demo result links are native new-tab anchors");

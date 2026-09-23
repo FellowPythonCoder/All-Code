@@ -13,6 +13,14 @@ const WIKI_PAGE = {
     ],
   },
 };
+const SEARX_PAGE = {
+  results: [
+    { title: 'Bird facts — full web', url: 'https://birds.example/facts', content: 'Everything about birds', engine: 'duckduckgo' },
+    { title: 'More birds', url: 'https://birds.example/more', content: 'Even more', engine: 'bing' },
+    { title: 'dup', url: 'https://birds.example/facts', content: 'should be deduped' },
+    { title: 'bad', url: 'javascript:alert(1)', content: 'skip' },
+  ],
+};
 const PIPED_PAGE = {
   items: [
     { url: '/watch?v=abc123', title: 'A video about birds', thumbnail: 'https://pipedproxy.example/bird.jpg', uploaderName: 'Bird Channel', duration: 214, views: 250000 },
@@ -46,18 +54,55 @@ function responder(routes) {
   };
 }
 
-test('web search uses Wikipedia with snippet text, overview-shaped results, and a cursor', async () => {
+test('web search hits the full web via SearXNG, dedupes, filters, and paginates on the same host', async () => {
+  const calls = [];
+  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return responder([['searx.be', SEARX_PAGE]])(url); } });
+  const data = await runtime.search('birds', 'web', null);
+  assert.match(calls[0], /searx\.be\/search\?q=birds&format=json&language=en&page=1/);
+  assert.equal(data.results.length, 2, 'deduped and scheme-filtered');
+  assert.equal(data.results[0].url, 'https://birds.example/facts');
+  assert.equal(data.results[0].credit, 'duckduckgo');
+  assert.equal(data.overview.length, 2);
+  assert.deepEqual(JSON.parse(data.nextCursor), { s: 2, i: 0 });
+  assert.match(data.notice, /SearXNG/);
+  await runtime.search('birds', 'web', data.nextCursor);
+  assert.match(calls[1], /searx\.be\/search\?q=birds&format=json&language=en&page=2/);
+});
+
+test('web search rotates SearXNG hosts when one fails, then falls back to Wikipedia', async () => {
+  const calls = [];
+  const runtime = createRuntime({ fetchImpl: async (url) => {
+    calls.push(String(url));
+    if (String(url).includes('searxng.site')) return responder([['searxng.site', SEARX_PAGE]])(url);
+    if (String(url).includes('en.wikipedia.org')) return responder([['en.wikipedia.org', WIKI_PAGE]])(url);
+    throw new Error('down');
+  } });
+  const data = await runtime.search('birds', 'web', null);
+  const hosts = [...new Set(calls.map((entry) => new URL(entry).host))];
+  assert.deepEqual(hosts.slice(0, 5), ['searx.be', 'search.inetol.net', 'searx.tiekoetter.com', 'priv.au', 'opnxng.com']);
+  assert.equal(hosts[5], 'searxng.site');
+  assert.equal(data.results[0].url, 'https://birds.example/facts');
+  const allDown = createRuntime({ fetchImpl: responder([['en.wikipedia.org', WIKI_PAGE]]) });
+  const fallback = await allDown.search('birds', 'web', null);
+  assert.match(fallback.notice, /unreachable right now.*Wikipedia/s);
+  assert.equal(fallback.results[0].title, 'YouTube');
+  assert.equal(fallback.results[0].url, 'https://en.wikipedia.org/wiki/YouTube');
+});
+
+test('Wikipedia fallback paginates with hidden cursors and strips snippets', async () => {
   const calls = [];
   const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return responder([['en.wikipedia.org', WIKI_PAGE]])(url); } });
   const data = await runtime.search('video', 'web', null);
-  assert.match(calls[0], /en\.wikipedia\.org/);
-  assert.match(calls[0], /origin=\*/);
-  assert.equal(data.results[0].title, 'YouTube');
-  assert.equal(data.results[0].url, 'https://en.wikipedia.org/wiki/YouTube');
+  const firstWiki = calls.find((entry) => entry.includes('en.wikipedia.org'));
+  assert.ok(firstWiki, 'wikipedia is reached after every searx host fails');
+  assert.match(firstWiki, /origin=\*/);
+  assert.match(firstWiki, /sroffset=0/);
   assert.equal(data.results[0].content, 'The video platform & more');
   assert.equal(data.overview.length, 2);
   assert.deepEqual(JSON.parse(data.nextCursor), { w: 2 });
-  assert.match(data.notice, /Wikipedia/);
+  await runtime.search('video', 'web', data.nextCursor);
+  const secondWiki = calls.find((entry, index) => index > 0 && entry.includes('sroffset=2'));
+  assert.ok(secondWiki, 'second wikipedia call continues from the cursor');
 });
 
 test('YouTube search returns real youtube.com watch links through Piped, then continues on the same host', async () => {
@@ -124,8 +169,8 @@ test('input validation and the open contract hold', async () => {
   assert.equal(opened, 'https://www.youtube.com/watch?v=abc123');
   assert.equal(runtime.isNative, false);
   assert.equal(runtime.externalLinks, true);
-  const working = createRuntime({ fetchImpl: responder([['en.wikipedia.org', WIKI_PAGE]]) });
-  const brokenCursor = await working.search('video', 'web', 'not-json');
+  const working = createRuntime({ fetchImpl: responder([['searx.be', SEARX_PAGE]]) });
+  const brokenCursor = await working.search('birds', 'web', 'not-json');
   assert.equal(typeof brokenCursor.elapsed, 'number');
   const offline = createRuntime({ fetchImpl: async () => { throw new Error('down'); } });
   await assert.rejects(offline.search('video', 'web'), /unreachable right now/);

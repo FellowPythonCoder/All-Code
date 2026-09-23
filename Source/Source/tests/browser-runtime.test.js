@@ -94,10 +94,12 @@ test("browser runtime continues from cursors and ignores broken ones", async () 
   const seen = [];
   const runtime = createRuntime({ fetchImpl: async (url) => { seen.push(String(url)); return jsonResponder(WIKI_BODY)(url); } });
   await runtime.search("video", "web", JSON.stringify({ w: 40 }));
-  assert.match(seen[0], /sroffset=40/);
+  const wikiCall = seen.find((entry) => entry.includes("en.wikipedia.org"));
+  assert.match(wikiCall, /sroffset=40/);
   seen.length = 0;
   await runtime.search("video", "web", "not-json");
-  assert.match(seen[0], /sroffset=0/);
+  const wikiCall2 = seen.find((entry) => entry.includes("en.wikipedia.org"));
+  assert.match(wikiCall2, /sroffset=0/);
 });
 
 test("browser runtime surfaces honest errors and opens sites in a new tab", async () => {
@@ -117,7 +119,7 @@ test("browser runtime rejects failed HTTP and unreadable JSON", async () => {
   const failing = createRuntime({ fetchImpl: async () => ({ ok: false, status: 503 }) });
   await assert.rejects(failing.search("x"), /unreachable/);
   const broken = createRuntime({ fetchImpl: async () => ({ ok: true, json: async () => { throw new Error("bad"); } }) });
-  await assert.rejects(broken.search("x"), /could not be read/);
+  await assert.rejects(broken.search("x"), /unreachable right now/);
 });
 
 const PIPED_PAGE = {
@@ -166,4 +168,42 @@ test("browser runtime wraps total outage in a friendly error", async () => {
   const runtime = createRuntime({ fetchImpl: async () => { throw new Error("down"); } });
   await assert.rejects(runtime.search("birds", "videos"), /unreachable right now/);
   await assert.rejects(runtime.search("birds", "images"), /unreachable right now/);
+});
+
+const SEARX_PAGE = {
+  results: [
+    { title: "Bird facts — full web", url: "https://birds.example/facts", content: "Everything about birds", engine: "duckduckgo" },
+    { title: "More birds", url: "https://birds.example/more", content: "Even more", engine: "bing" },
+    { title: "dup", url: "https://birds.example/facts", content: "should be deduped" },
+    { title: "bad", url: "javascript:alert(1)", content: "skip" },
+  ],
+};
+
+test("web search hits the full web via SearXNG, dedupes, filters, and paginates on the same host", async () => {
+  const calls = [];
+  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return jsonResponder(SEARX_PAGE)(url); } });
+  const data = await runtime.search("birds", "web", null);
+  assert.match(calls[0], /searx\.be\/search\?q=birds&format=json&language=en&page=1/);
+  assert.equal(data.results.length, 2, "deduped and scheme-filtered");
+  assert.equal(data.results[0].url, "https://birds.example/facts");
+  assert.equal(data.results[0].credit, "duckduckgo");
+  assert.equal(data.overview.length, 2);
+  assert.deepEqual(JSON.parse(data.nextCursor), { s: 2, i: 0 });
+  assert.match(data.notice, /SearXNG/);
+  await runtime.search("birds", "web", data.nextCursor);
+  assert.match(calls[1], /searx\.be\/search\?q=birds&format=json&language=en&page=2/);
+});
+
+test("web search rotates SearXNG hosts when one fails, then falls back to Wikipedia", async () => {
+  const calls = [];
+  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); if (String(url).includes("searxng.site")) return jsonResponder(SEARX_PAGE)(url); if (String(url).includes("en.wikipedia.org")) return jsonResponder(WIKI_BODY)(url); throw new Error("down"); } });
+  const data = await runtime.search("birds", "web", null);
+  const hosts = [...new Set(calls.map((entry) => new URL(entry).host))];
+  assert.deepEqual(hosts.slice(0, 5), ["searx.be", "search.inetol.net", "searx.tiekoetter.com", "priv.au", "opnxng.com"]);
+  assert.equal(hosts[5], "searxng.site");
+  assert.equal(data.results[0].url, "https://birds.example/facts");
+  const allDown = createRuntime({ fetchImpl: async (url) => { if (String(url).includes("en.wikipedia.org")) return jsonResponder(WIKI_BODY)(url); throw new Error("down"); } });
+  const fallback = await allDown.search("birds", "web", null);
+  assert.match(fallback.notice, /unreachable right now.*Wikipedia/s);
+  assert.equal(fallback.results[0].title, "YouTube");
 });

@@ -22,12 +22,18 @@ const PIPED_PAGE = {
   items: [{ url: '/watch?v=lofi123', title: 'lo-fi study beats', thumbnail: 'https://pipedproxy.example/lofi.jpg', uploaderName: 'Calm Channel', duration: 182, views: 98000 }],
   nextpage: 'TOK',
 };
+const SEARX_PAGE = {
+  results: [
+    { title: 'Quiet places elsewhere', url: 'https://www.example.org/quiet', content: 'Quiet places on the open web', engine: 'duckduckgo' },
+  ],
+};
 
 function fixtures(target) {
   const url = String(target);
   if (url.includes('/api/search')) return { ok: false, status: 404, json: async () => ({}) };
   if (url.includes('/api/health')) return { ok: false, status: 404, json: async () => ({}) };
   if (url.includes('pipedapi.kavin.rocks')) return { ok: true, status: 200, json: async () => PIPED_PAGE };
+  if (url.includes('format=json')) return { ok: true, status: 200, json: async () => SEARX_PAGE };
   if (url.includes('en.wikipedia.org')) return { ok: true, status: 200, json: async () => WIKI_PAGE };
   throw new Error('no fixture for ' + url);
 }
@@ -90,10 +96,11 @@ test('on the real opensreon.com page the Try panel searches YouTube and All with
   document.querySelector('.kinds button[data-kind="web"]').dispatchEvent(new dom.window.Event('click', { bubbles: true }));
   document.getElementById('query').value = 'quiet places';
   document.getElementById('search-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
-  await waitFor(() => (document.querySelector('#results article.result a') || {}).href?.includes('wikipedia'), 'web results');
+  await waitFor(() => (document.querySelector('#results article.result a') || {}).href?.includes('example.org'), 'full-web results');
   const web = document.querySelector('#results article.result a');
-  assert.match(web.href, /en\.wikipedia\.org\/wiki/);
+  assert.equal(web.href, 'https://www.example.org/quiet', 'web results come from the open web, not a wiki');
   assert.equal(web.target, '_blank');
+  assert.match(document.getElementById('search-status').textContent, /SearXNG/);
   dom.window.close();
 });
 
