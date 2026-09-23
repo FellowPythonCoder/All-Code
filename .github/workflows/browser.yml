@@ -1,0 +1,224 @@
+name: browser
+
+on:
+  push:
+    branches: [main]
+    tags: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS build, installers, launch verify
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r Source/Browser/requirements.txt
+
+      - name: Run tests
+        working-directory: Source/Browser
+        run: python -m pytest tests -q
+
+      - name: Build the search engine
+        working-directory: Source/Browser
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
+
+      - name: Build DMG and PKG installers
+        working-directory: Source/Browser
+        run: python tools/build.py finish
+
+      - name: Verify the app opens
+        working-directory: Source/Browser
+        env:
+          QTWEBENGINE_DISABLE_SANDBOX: "1"
+        run: python tools/build.py verify
+
+      - name: Verify the DMG contents
+        run: |
+          hdiutil attach Source/Browser/dist/Sreon.dmg -mountpoint /tmp/sreon-dmg
+          test -d /tmp/sreon-dmg/Sreon.app
+          test -d /tmp/sreon-dmg/Applications
+          test -x /tmp/sreon-dmg/Sreon.app/Contents/MacOS/Sreon
+          echo "DMG contains Sreon.app and the Applications link"
+          hdiutil detach /tmp/sreon-dmg
+
+      - name: Verify the PKG installs Sreon into Applications
+        working-directory: Source/Browser
+        run: |
+          set -o pipefail
+          LOG=$(mktemp)
+          if ! sudo installer -pkg dist/Sreon-Installer.pkg -target / 2>&1 | tee "$LOG"; then
+            tail -6 "$LOG" | cut -c1-220 | sed 's/^/::error::installer: /'
+            exit 1
+          fi
+          test -d /Applications/Sreon.app || {
+            echo "::error::/Applications/Sreon.app missing after install"
+            pkgutil --pkg-info com.sreon.browser 2>&1 | sed 's/^/::error::info: /' | cut -c1-220
+            pkgutil --files com.sreon.browser 2>/dev/null | head -4 | sed 's/^/::error::payload: /' | cut -c1-220
+            ls /Applications | grep -i sreon | sed 's/^/::error::appshome: /' || echo "::error::appshome: no Sreon in /Applications"
+            ls "$HOME/Applications" 2>/dev/null | grep -i sreon | sed 's/^/::error::userappshome: /' || echo "::error::userappshome: no Sreon in ~/Applications"
+            exit 1
+          }
+          test -x /Applications/Sreon.app/Contents/MacOS/Sreon || { echo "::error::app binary missing after install"; exit 1; }
+          echo "PKG installed Sreon.app to /Applications"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            Source/Browser/dist/Sreon.dmg
+            Source/Browser/dist/Sreon-Installer.pkg
+
+  windows:
+    name: Windows build, installer, launch verify
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r Source/Browser/requirements.txt
+
+      - name: Run tests
+        working-directory: Source/Browser
+        run: python -m pytest tests -q
+
+      - name: Build the search engine
+        working-directory: Source/Browser
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
+
+      - name: Verify the app opens
+        working-directory: Source/Browser
+        env:
+          QTWEBENGINE_DISABLE_SANDBOX: "1"
+        run: python tools/build.py verify
+
+      - name: Build the installer
+        working-directory: Source/Browser
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = (Get-ChildItem "C:\Program Files*\Inno Setup*\ISCC.exe" | Select-Object -First 1).FullName }
+          & $iscc "packaging\windows\sreon.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: Source/Browser/dist/Sreon-Setup.exe
+
+  linux:
+    name: Linux build, packages, launch verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt runtime dependencies
+        run: |
+          set -o pipefail
+          LOG=$(mktemp)
+          if ! sudo apt-get satisfy -y libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 'libglib2.0-0 | libglib2.0-0t64' libnss3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 'libasound2 | libasound2t64' libxtst6 libxkbfile1 libgbm1 xvfb 2>&1 | tee "$LOG"; then
+            grep -E "^E:" "$LOG" | head -8 | cut -c1-220 | sed 's/^/::error::apt: /'
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r Source/Browser/requirements.txt
+
+      - name: Run tests
+        working-directory: Source/Browser
+        run: python -m pytest tests -q
+
+      - name: Build the search engine
+        working-directory: Source/Browser
+        run: python tools/build.py engine
+
+      - name: Freeze the app
+        working-directory: Source/Browser
+        run: python tools/build.py freeze
+
+      - name: Build tarball and deb
+        working-directory: Source/Browser
+        run: python tools/build.py finish
+
+      - name: Verify the app opens
+        working-directory: Source/Browser
+        env:
+          QTWEBENGINE_DISABLE_SANDBOX: "1"
+        run: xvfb-run -a python tools/build.py verify
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            Source/Browser/dist/Sreon-linux.tar.gz
+            Source/Browser/dist/Sreon-linux.deb
+
+  bundle:
+    name: Bundle everything into Sreon.zip
+    needs: [macos, windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble the delivery folder
+        run: |
+          mkdir -p bundle/Windows bundle/macOS bundle/Linux
+          cp artifacts/windows/* bundle/Windows/
+          cp artifacts/macos/* bundle/macOS/
+          cp artifacts/linux/* bundle/Linux/
+          cp -R Source bundle/Source
+          rm -rf bundle/Source/Browser/dist bundle/Source/Browser/build bundle/Source/Browser/engine bundle/Source/Browser/freeze.log
+          cp Source/HOW-IT-WORKS.md bundle/
+          cd bundle && zip -qr ../Sreon.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sreon-zip
+          path: Sreon.zip
+
+  release:
+    name: Attach Sreon.zip to the release
+    needs: bundle
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Sreon-zip
+          path: .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: Sreon.zip

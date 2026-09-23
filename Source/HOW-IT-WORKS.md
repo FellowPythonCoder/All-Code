@@ -8,11 +8,11 @@ The start page keeps the original Sreon mark and the line **Search privately. Br
 
 Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
 
-| System | In the folder | Run |
+| System | In the folder | Install |
 | --- | --- | --- |
-| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. SmartScreen may warn because the build is not publisher-signed. |
-| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon to Applications. Gatekeeper may warn because the build is not notarized. |
-| Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
+| Windows 10/11, x64 | `Windows/Sreon-Setup.exe` | Run the setup wizard and follow the steps. Sreon appears in the Start Menu, and optionally on the desktop. SmartScreen may warn because the build is not publisher-signed. |
+| macOS 11+ | `macOS/Sreon.dmg` and `macOS/Sreon-Installer.pkg` | DMG: open it and drag Sreon to Applications. PKG: double-click and the macOS Installer puts Sreon in Applications. Gatekeeper may warn because the build is not notarized. |
+| Linux x86-64 | `Linux/Sreon-linux.deb` and `Sreon-linux.tar.gz` |deb: double-click or `sudo apt install ./Sreon-linux.deb` — Sreon is added to the applications menu. tar.gz: unpack and run `./Sreon`. |
 
 Internet is required for websites and live search. The app does not phone home to Sreon. Search queries go to the public sources used by the Rust engine only when you search. Website visits are ordinary HTTPS to that site.
 
@@ -67,9 +67,9 @@ A complete browser download is one `Sreon/` folder:
 
 ```text
 Sreon/
-  Windows/          Sreon.exe and Chromium runtime
-  macOS/            Sreon.dmg
-  Linux/            Sreon.AppImage and Sreon-linux.tar.gz
+  Windows/          Sreon-Setup.exe
+  macOS/            Sreon.dmg and Sreon-Installer.pkg
+  Linux/            Sreon-linux.deb and Sreon-linux.tar.gz
   Source/Browser/   desktop browser source
   Website/          website and hidden workspace
   HOW-IT-WORKS.md
@@ -94,7 +94,7 @@ python3 -m venv .venv
 .venv/bin/python tools/build.py
 ```
 
-`tools/build.py` compiles `sreon-api`, copies it to `engine/`, and freezes the desktop app with PyInstaller. On a Mac it also writes `dist/Sreon.dmg`. On Linux it writes `dist/Sreon-linux.tar.gz`. GitHub Actions attaches platform folders and packs them together.
+`tools/build.py` compiles `sreon-api`, copies it to `engine/`, and freezes the desktop app with PyInstaller. On a Mac it also writes `dist/Sreon.dmg` and `dist/Sreon-Installer.pkg`. On Linux it writes `dist/Sreon-linux.tar.gz` and `dist/Sreon-linux.deb`. GitHub Actions attaches the installers to releases. `python tools/build.py verify` launches the frozen app and proves it opens.
 
 The website is separate and is not required to use the installed browser.
 
@@ -154,6 +154,10 @@ The colon in `sreon://privacy` is the only public navigation link to the notes a
 The hidden workspace includes 24 games and an optional bring-your-own-key AI chat. Geometry Rush has ten seeded levels with cube, spaceship, and wave sections, safe square platforms, buffered jumps, and more generous spacing. Space/click/tap jumps; hold repeats jumps or flies upward. Arrow keys select a level; Enter starts it. Press `4` during play to toggle assisted autoplay, or use its on-screen button. Completed assisted runs are marked and do not earn manual-run points. The Endless button or `i` on the selection screen starts an endless run. Its speed and corridor difficulty increase toward bounded limits; obstacle clusters have at most three spikes and retain tested jump clearances. This avoids simply accelerating into mathematically impossible obstacles. Automated tests complete every finite level with ordinary controls and collisions enabled, and check sampled endless sectors; they are not a claim of exhaustive human playtesting of every possible sequence.
 
 AI chat calls the configured Gemini model directly only after Send. It requires the visitor’s own valid API key and may incur provider charges. Keys stay in memory by default; “Remember for this tab” opts into session storage. Forget removes the key. A key previously saved by the old page is moved out of persistent storage into memory. Chat history stays in memory; Clear chat removes it from the page. Messages and optional text attachments go to the provider, whose policies also apply. Attachments are limited to 128 KiB, requests to 512 KiB, and the conversation context to the most recent 20 messages. Replies are rendered as text with safe code blocks; they are not executed. Stop cancels waiting on the browser side but cannot guarantee the provider stops processing or charging for an already submitted request. No AI responses or paid API calls were used in the automated UI tests.
+
+### Try Sreon in the browser, no server
+
+Opening the site (`app/index.html`) as plain files or on any static host now gives real search, not a stub. Without the desktop shell, the page runs an in-browser runtime: **All** searches the Wikipedia API, **Videos** plays real YouTube results through the community Piped/Invidious network (falling back to Commons video files when those instances are down), and **Images** and **Photos** search the Wikimedia Commons library — author and licence credits on each card, API-continuation cursors for pagination. Result links open the real website in a new browser tab. Every result notice names its live source; nothing is faked, and no server, keys, or telemetry are involved. The installed app keeps using its own Rust engine (the wider web plus the Commons) inside the same interface; the browser demo simply cannot reach those non-CORS sources, so it uses the sources browsers are allowed to reach.
 
 ### Run the actual website search engine
 

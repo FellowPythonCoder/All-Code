@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+Source/Browser/engine/
+Source/Browser/dist/
+Source/Browser/build/
+Source/Browser/freeze.log
+Source/Browser/Sreon.spec

@@ -6,6 +6,7 @@ import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = "0.5.0"
 
 def engine_name():
     return "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
@@ -15,7 +16,7 @@ def find_engine():
     for path in (
         ROOT / "engine" / name,
         ROOT / "search" / "target" / "release" / name,
-        ROOT.parent / "Extra" / "Source" / "src-tauri" / "target" / "release" / name,
+        ROOT.parent / "Source" / "src-tauri" / "target" / "release" / name,
     ):
         print("engine candidate", path, path.is_file(), flush=True)
         if path.is_file():
@@ -44,8 +45,8 @@ def run(command):
     text = log.read_text(encoding="utf-8", errors="replace")
     print(text[-4000:], flush=True)
     if process.returncode:
-        snippet = text[-2000:].replace("\r", " ").replace("%", "/")
-        print("::error::" + snippet[:3900], flush=True)
+        for line in text.replace("\r", " ").replace("%", "/").splitlines()[-8:]:
+            print("::error::" + line[:230], flush=True)
         raise SystemExit(process.returncode)
 
 def pyinstaller():
@@ -70,7 +71,7 @@ def pyinstaller():
         "--exclude-module", "tkinter",
         "--exclude-module", "matplotlib",
         "--exclude-module", "numpy",
-        "app/main.py",
+        "run.py",
     ]
     if sys.platform == "darwin":
         icns = ROOT / "assets" / "icon.icns"
@@ -81,23 +82,39 @@ def pyinstaller():
         if ico.is_file():
             command.extend(["--icon", str(ico)])
     run(command)
+    if sys.platform == "darwin":
+        fix_bundle()
+
+def fix_bundle():
+    import plistlib
+    info = bundled_app() / "Contents" / "Info.plist"
+    if not info.is_file():
+        raise SystemExit("Sreon.app Info.plist missing")
+    with info.open("rb") as handle:
+        data = plistlib.load(handle)
+    data["LSMinimumSystemVersion"] = "11.0"
+    data["NSHighResolutionCapable"] = True
+    data["CFBundleDisplayName"] = "Sreon"
+    data["LSApplicationCategoryType"] = "public.app-category.productivity"
+    data.setdefault("CFBundleShortVersionString", VERSION)
+    with info.open("wb") as handle:
+        plistlib.dump(data, handle)
+    print("bundle metadata updated", info, flush=True)
+
+def bundled_app():
+    app = ROOT / "dist" / "Sreon.app"
+    if app.exists():
+        return app
+    nested = ROOT / "dist" / "Sreon" / "Sreon.app"
+    if nested.exists():
+        return nested
+    raise SystemExit("Sreon.app was not built")
 
 def dmg():
-    app = ROOT / "dist" / "Sreon.app"
-    if not app.exists():
-        nested = ROOT / "dist" / "Sreon" / "Sreon.app"
-        app = nested if nested.exists() else None
-    if app is None or not Path(app).exists():
-        raise SystemExit("Sreon.app was not built")
-    stage = ROOT / "dist" / "dmg"
-    if stage.exists():
-        shutil.rmtree(stage)
-    stage.mkdir(parents=True)
-    shutil.copytree(app, stage / "Sreon.app", symlinks=True)
-    dmg_path = ROOT / "dist" / "Sreon.dmg"
-    if dmg_path.exists():
-        dmg_path.unlink()
-    run(["hdiutil", "create", "-volname", "Sreon", "-srcfolder", str(stage), "-ov", "-format", "UDZO", str(dmg_path)])
+    run(["bash", str(ROOT / "packaging" / "mac" / "make_dmg.sh")])
+
+def pkg():
+    run(["bash", str(ROOT / "packaging" / "mac" / "make_pkg.sh")])
 
 def linux_tar():
     source = ROOT / "dist" / "Sreon"
@@ -107,16 +124,80 @@ def linux_tar():
     with tarfile.open(archive, "w:gz") as tar:
         tar.add(source, arcname="Sreon")
 
-def main():
-    skip = "--skip-engine" in sys.argv
-    if not skip:
-        run(["cargo", "build", "--release", "--manifest-path", str(ROOT.parent / "Extra" / "Source" / "src-tauri" / "Cargo.toml"), "--no-default-features", "--features", "api", "--bin", "sreon-api"])
-    place_engine()
-    pyinstaller()
+def linux_deb():
+    run(["bash", str(ROOT / "packaging" / "linux" / "make_deb.sh")])
+
+def verify():
+    print("== verifying Sreon build ==", flush=True)
     if sys.platform == "darwin":
-        dmg()
+        binary = bundled_app() / "Contents" / "MacOS" / "Sreon"
+        label = "macOS app bundle"
     elif sys.platform.startswith("linux"):
-        linux_tar()
+        binary = ROOT / "dist" / "Sreon" / "Sreon"
+        label = "Linux build"
+    else:
+        binary = ROOT / "dist" / "Sreon" / "Sreon.exe"
+        label = "Windows build"
+    if not binary.is_file():
+        raise SystemExit(f"verify: {binary} missing")
+    print("verifying", label, ":", binary, flush=True)
+
+    def attempt(extra_env):
+        env = dict(os.environ)
+        env.update(extra_env)
+        env["SREON_DATA"] = str(Path(env.get("HOME", "/tmp")) / "sreon-verify-data")
+        env["SREON_VERIFY"] = "1"
+        env.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+        env.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox --disable-gpu")
+        launch = subprocess.Popen(
+            [str(binary), "--verify-launch"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env,
+        )
+        try:
+            out, _ = launch.communicate(timeout=120)
+            code = launch.returncode
+        except subprocess.TimeoutExpired:
+            launch.kill()
+            out, _ = launch.communicate()
+            code = "timeout"
+        return code, out
+
+    code, out = attempt({})
+    if code != 0:
+        print("native launch failed, retrying offscreen for diagnosis", flush=True)
+        for line in out.strip().splitlines()[-15:]:
+            print("::error::launch output: " + line[:230], flush=True)
+        code, out = attempt({"QT_QPA_PLATFORM": "offscreen"})
+    for line in out.strip().splitlines()[-8:]:
+        print("launch:", line[:230], flush=True)
+    if code != 0:
+        for line in out.strip().splitlines()[-15:]:
+            print("::error::offscreen output: " + line[:230], flush=True)
+        raise SystemExit(f"verify: app failed to open (status {code})")
+    print("verify: app opened and exited cleanly", flush=True)
+
+def main():
+    args = sys.argv[1:]
+    if "verify" in args:
+        verify()
+        return
+    if "--skip-engine" in args:
+        args = ["freeze", "finish"]
+    if not args:
+        args = ["engine", "freeze", "finish"]
+    for mode in args:
+        if mode == "engine":
+            run(["cargo", "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
+            place_engine()
+        elif mode == "freeze":
+            pyinstaller()
+        elif mode == "finish":
+            if sys.platform == "darwin":
+                dmg()
+                pkg()
+            elif sys.platform.startswith("linux"):
+                linux_tar()
+                linux_deb()
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,9 @@
 import sys
-from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, Qt, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWebEngineCore import QWebEngineSettings
+from PySide6.QtWebEngineWidgets import QWebEngineView
 
 class Session:
     def __init__(self):
@@ -60,6 +62,7 @@ class Session:
         self.store.close()
 
 def main():
+    from . import web
     from .paths import ASSETS
     QCoreApplication.setOrganizationName("Sreon")
     QCoreApplication.setApplicationName("Sreon")
@@ -73,6 +76,14 @@ def main():
     session = Session()
     app.aboutToQuit.connect(session.close)
     session.start(app)
+    if "--verify-launch" in sys.argv:
+        QTimer.singleShot(1200, app.quit)
+        app.exec()
+        session.close()
+        if sys.stdout:
+            sys.stdout.write("Sreon window opened\n")
+            sys.stdout.flush()
+        raise SystemExit(0)
     raise SystemExit(app.exec())
 
 if __name__ == "__main__":
