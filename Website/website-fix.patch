@@ -1,0 +1,743 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..c2658d7
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++node_modules/
+diff --git a/index.html b/index.html
+index 884cbbc..a0b5366 100644
+--- a/index.html
++++ b/index.html
+@@ -10,6 +10,7 @@
+ <link rel="icon" href="/site/assets/mark.png">
+ <link rel="stylesheet" href="/site/assets/site.css">
+ <script src="/site/assets/theme.js"></script>
++<script type="module" src="/site/assets/runtime.js"></script>
+ <script src="/site/assets/site.js" defer></script>
+ </head>
+ <body>
+@@ -26,7 +27,7 @@
+ </section>
+ <section class="intro wrap" id="about"><p class="eyebrow">A BROWSER, NOT A DISTRACTION</p><div><h2>Keep the useful.<br>Leave the rest.</h2><p>Sreon brings search and browsing into one small desktop app. A familiar address bar, real website results, and a clear path back to where you started.</p></div><div class="principles"><article><span>01</span><h3>Find your own way.</h3><p>Search the web, explore images, or go straight to a website.</p></article><article><span>02</span><h3>A quieter space.</h3><p>Local interface assets. Light and dark themes. No account needed to search.</p></article><article><span>03</span><h3>Nothing mysterious.</h3><p>A Rust core and your system’s webview. Not a new browser engine pretending to be one.</p></article></div></section>
+ <section class="discover wrap" id="discover"><div class="section-top"><div><p class="eyebrow">FOLLOW THE SMALL DETOURS</p><h2>A good place<br>to <em>get curious.</em></h2></div><p>Sometimes you know what you’re looking for.<br>Sometimes a little inspiration is enough.</p></div><div class="discovery-grid"><button class="discovery-card" type="button" data-query="quiet coastal walking trails"><div class="discovery-image"><img src="/site/assets/coast.webp" alt="Illustrative turquoise coast and a winding limestone path" width="1440" height="960" loading="lazy"><span>01 / OUTSIDE</span></div><div><h3>Take the scenic route.</h3><span aria-hidden="true">↗</span></div><p>Coastal walks. New places. A change of pace.</p></button><button class="discovery-card" type="button" data-query="minimalist reading room design"><div class="discovery-image"><img src="/site/assets/studio.webp" alt="Illustrative sunlit reading corner with warm plaster and a wooden chair" width="1440" height="960" loading="lazy"><span>02 / MAKE SPACE</span></div><div><h3>Find a fresh perspective.</h3><span aria-hidden="true">↗</span></div><p>Thoughtful spaces and ideas worth keeping.</p></button><button class="discovery-card" type="button" data-query="desert landscapes photography guide"><div class="discovery-image"><img src="/site/assets/landscape.webp" alt="Illustrative pale desert dunes and distant purple mountains" width="1440" height="960" loading="lazy"><span>03 / LOOK CLOSER</span></div><div><h3>Notice something new.</h3><span aria-hidden="true">↗</span></div><p>A landscape. A story. The next rabbit hole.</p></button></div></section>
+-<section class="try-section" id="try"><div class="wrap try-layout"><div><p class="eyebrow">A SMALL WINDOW INTO SREON</p><h2>Follow your<br><em>curiosity.</em></h2><p>Try the search engine right here.<br>No installation. No sign-up.</p><p class="fine">This is web search, not a full browser running inside this page. Result links open the original websites.</p></div><div class="search-window"><div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>sreon://search</span><span aria-hidden="true">↗</span></div><div class="search-inner"><img src="/site/assets/mark.png" width="46" height="46" alt=""><h3>Where to?</h3><form id="search-form" role="search"><label class="sr-only" for="query">Search the web</label><div class="search-input"><input id="query" name="q" type="search" maxlength="500" placeholder="A question, a place, a new idea…" required autocomplete="off"><button type="submit" id="search-submit" aria-label="Search">↗</button></div></form><div class="suggestions" aria-label="Try a search"><button type="button" data-query="quiet places to visit">Quiet places ↗</button><button type="button" data-query="YouTube">YouTube ↗</button><button type="button" data-query="design inspiration">A little inspiration ↗</button></div><p id="search-status" class="search-status" role="status" aria-live="polite">Connecting to the Rust search engine…</p><div id="results" aria-label="Search results"></div><button id="more" class="text-button" type="button" hidden>More results ↓</button></div></div></div></section>
++<section class="try-section" id="try"><div class="wrap try-layout"><div><p class="eyebrow">A SMALL WINDOW INTO SREON</p><h2>Follow your<br><em>curiosity.</em></h2><p>Try the search engine right here.<br>No installation. No sign-up.</p><p class="fine">This is real search, not a full browser in this page. All searches Wikipedia, YouTube plays through the community Piped network, and Images and Photos come from the Wikimedia Commons — every result links to the original website. The installed app searches the wider web with its own engine.</p></div><div class="search-window"><div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>sreon://search</span><span aria-hidden="true">↗</span></div><div class="search-inner"><img src="/site/assets/mark.png" width="46" height="46" alt=""><h3>Where to?</h3><form id="search-form" role="search"><label class="sr-only" for="query">Search the web</label><div class="search-input"><input id="query" name="q" type="search" maxlength="500" placeholder="A question, a place, a new idea…" required autocomplete="off"><button type="submit" id="search-submit" aria-label="Search">↗</button></div></form><div class="kinds" role="group" aria-label="What to search"><button type="button" data-kind="web" aria-pressed="true">All</button><button type="button" data-kind="videos" aria-pressed="false">YouTube</button><button type="button" data-kind="images" aria-pressed="false">Images</button><button type="button" data-kind="photos" aria-pressed="false">Photos</button></div><div class="suggestions" aria-label="Try a search"><button type="button" data-query="quiet places to visit">Quiet places ↗</button><button type="button" data-query="lo-fi study beats" data-kind="videos">YouTube ↗</button><button type="button" data-query="design inspiration">A little inspiration ↗</button></div><p id="search-status" class="search-status" role="status" aria-live="polite">Connecting to the Rust search engine…</p><div id="results" aria-label="Search results"></div><button id="more" class="text-button" type="button" hidden>More results ↓</button></div></div></div></section>
+ <section class="engine wrap"><div><p class="eyebrow">THE SAME ENGINE. A SMALLER WINDOW.</p><h2>Real search.<br>Not a pretend demo.</h2><p>The website uses the same Rust search core as the desktop app, through a small API adapter. No hard-coded results, no made-up answers, and no hidden switch to an unrelated demo.</p></div><ol class="engine-steps"><li><span>01</span><div><h3>Your question.</h3><p>A few words, a whole question, or something you’ve been meaning to look up.</p></div></li><li><span>02</span><div><h3>The Sreon engine.</h3><p>It asks existing web-search sources and returns links, titles, and short excerpts. Recent results may come from a brief in-memory cache.</p></div></li><li><span>03</span><div><h3>Back to the original.</h3><p>Every result links to its website. You choose what to read, watch, or explore next.</p></div></li></ol></section>
+ <section class="privacy wrap" id="privacy"><div><p class="eyebrow privacy-address">sreon<a href="/site/notes/" class="quiet-colon" aria-label="Open notes">:</a>//privacy</p><h2>How privacy<br>actually works here<span class="brand-period">.</span></h2><p>Plain language. Not a promise<br>that the internet can’t keep.</p></div><div class="privacy-list"><article><span>01</span><div><h3>Your searches go somewhere.</h3><p>This demo sends your query to the Sreon API. The engine asks external search providers for results. The website host and those providers may process connection details.</p></div></article><article><span>02</span><div><h3>Your preferences stay here.</h3><p>This page stores your theme in this browser. It has no analytics script or advertising tracker. The hosting service may keep its own request logs.</p></div></article><article><span>03</span><div><h3>A website is still a website.</h3><p>Following a result takes you to that site, with its own cookies and privacy practices. Sreon is not a VPN or an anonymity service.</p></div></article></div></section>
+ <section class="questions wrap"><div><p class="eyebrow">A FEW THINGS WORTH KNOWING</p><h2>Just the<br>straight answers.</h2></div><div><details><summary>Is this a whole browser inside a website?</summary><p>No. This is a small window into Sreon’s search engine. The desktop app handles actual browsing using your system’s webview. Here, results take you to the original websites.</p></details><details><summary>Do I need an account to search?</summary><p>No Sreon account is required. The public search service has request limits to keep it available, and external search sources may sometimes be unavailable.</p></details><details><summary>Does Sreon have its own search index?</summary><p>Not currently. The Rust engine retrieves results from existing online sources. Sreon is open about that distinction instead of claiming to crawl the whole web.</p></details><details><summary>What stays on this device?</summary><p>This page remembers your light or dark theme locally. It doesn’t save a search-history list in your browser. Queries still go to the search service and its providers; hosting services may keep connection logs.</p></details></div></section>
+diff --git a/site/assets/runtime.js b/site/assets/runtime.js
+new file mode 100644
+index 0000000..2e058e7
+--- /dev/null
++++ b/site/assets/runtime.js
+@@ -0,0 +1,234 @@
++const WIKI = "https://en.wikipedia.org/w/api.php";
++const COMMONS = "https://commons.wikimedia.org/w/api.php";
++const TUBE_SOURCES = [
++  { host: "https://pipedapi.kavin.rocks", kind: "piped" },
++  { host: "https://pipedapi.adminforge.de", kind: "piped" },
++  { host: "https://inv.nadeko.net", kind: "invidious" },
++  { host: "https://invidious.nerdvpn.de", kind: "invidious" },
++];
++const TIMEOUT = 15000;
++const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&nbsp;": " " };
++
++function textOf(markup) {
++  let value = String(markup || "").replace(/<[^>]*>/g, " ").replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
++  for (const [entity, character] of Object.entries(ENTITIES)) value = value.split(entity).join(character);
++  return value.replace(/\s+/g, " ").trim();
++}
++
++function clip(value, limit) {
++  const single = textOf(value);
++  return single.length > limit ? single.slice(0, limit - 1).replace(/\s+\S*$/, "") + "…" : single;
++}
++
++async function getJSON(fetchImpl, url, timeout = TIMEOUT) {
++  const controller = new AbortController();
++  const timer = setTimeout(() => controller.abort(), timeout);
++  let response;
++  try {
++    response = await fetchImpl(url, { signal: controller.signal, mode: "cors", credentials: "omit", referrerPolicy: "no-referrer" });
++  } catch {
++    throw new Error("unreachable");
++  } finally {
++    clearTimeout(timer);
++  }
++  if (!response.ok) throw new Error("unreachable");
++  try { return await response.json(); }
++  catch { throw new Error("unreadable"); }
++}
++
++function wikiWeb(fetchImpl, query, offset) {
++  const params = new URLSearchParams({
++    action: "query", format: "json", formatversion: "2", origin: "*",
++    list: "search", srsearch: query, srlimit: "20", sroffset: String(offset), srprop: "snippet",
++  });
++  return getJSON(fetchImpl, `${WIKI}?${params}`).then((data) => {
++    const rows = data?.query?.search || [];
++    const total = data?.query?.searchinfo?.totalhits || 0;
++    const results = rows.map((row) => ({
++      title: row.title,
++      url: `https://en.wikipedia.org/wiki/${encodeURIComponent(row.title.replace(/ /g, "_"))}`,
++      content: clip(row.snippet, 300),
++      thumbnail: null,
++      credit: "",
++    }));
++    const overview = results.slice(0, 3).filter((item) => item.content)
++      .map((item) => ({ title: item.title, url: item.url, content: item.content }));
++    const next = offset + rows.length;
++    return {
++      results,
++      overview,
++      nextCursor: rows.length > 0 && next < total ? JSON.stringify({ w: next }) : null,
++      notice: "Hosted demo — web results come from Wikipedia. The installed Sreon app searches the wider web.",
++      elapsed: 0,
++      cached: false,
++    };
++  });
++}
++
++function commons(fetchImpl, query, extra, offset) {
++  const params = new URLSearchParams({
++    action: "query", format: "json", formatversion: "2", origin: "*",
++    generator: "search", gsrsearch: `${query} ${extra}`.trim(), gsrnamespace: "6",
++    gsrlimit: "30", gsroffset: String(offset),
++    prop: "imageinfo", iiprop: "url|mime|extmetadata", iiurlwidth: "340",
++  });
++  return getJSON(fetchImpl, `${COMMONS}?${params}`).then((data) => {
++    const pages = Object.values(data?.query?.pages || {});
++    let rows = pages.map((page) => ({ page, info: page.imageinfo?.[0] })).filter((row) => row.info?.descriptionurl);
++    if (extra === "filemime:image/jpeg") rows = rows.filter((row) => row.info.mime === "image/jpeg");
++    return { rows, next: data?.continue?.gsroffset };
++  });
++}
++
++function commonsMedia(fetchImpl, query, kind, offset) {
++  const extra = kind === "videos" ? "filetype:video" : kind === "photos" ? "filemime:image/jpeg" : "filetype:bitmap";
++  return commons(fetchImpl, query, extra, offset).then(({ rows, next }) => {const results = rows.map(({ page, info }) => {
++      const meta = info.extmetadata || {};
++      const artist = textOf(meta.Artist?.value);
++      const license = textOf(meta.LicenseShortName?.value);
++      return {
++        title: page.title.replace(/^File:/, ""),
++        url: info.descriptionurl,
++        content: clip(meta.ImageDescription?.value || meta.Categories?.value || "", 220),
++        thumbnail: info.thumburl || null,
++        credit: [artist, license].filter(Boolean).join(" · "),
++      };
++    });
++    return {
++      results,
++      overview: [],
++      nextCursor: next != null ? JSON.stringify({ c: next }) : null,
++      notice: `Hosted demo — ${kind === "photos" ? "photos (JPEG)" : kind} come from the Wikimedia Commons library, credited on every card. The installed Sreon app searches more sources.`,
++      elapsed: 0,
++      cached: false,
++    };
++  });
++}
++
++function parseTubeCursor(cursor) {
++  try {
++    const parsed = JSON.parse(cursor);
++    const index = Number(parsed?.i);
++    const token = typeof parsed?.p === "string" ? parsed.p : "";
++    if (Number.isInteger(index) && index >= 0 && index < TUBE_SOURCES.length) return { index, token };
++  } catch {}
++  return { index: -1, token: "" };
++}
++
++function pipedRows(payload) {
++  const rows = Array.isArray(payload?.items) ? payload.items : [];
++  return rows
++    .filter((item) => typeof item?.url === "string" && item.url.startsWith("/watch?v="))
++    .map((item) => {
++      const bits = [];
++      if (item.uploaderName) bits.push(String(item.uploaderName));
++      if (Number.isFinite(item.duration) && item.duration > 0) bits.push(`${Math.max(1, Math.round(item.duration / 60))} min`);
++      if (Number.isFinite(item.views) && item.views > 0) bits.push(`${Math.round(item.views / 1000)}K views`);
++      return {
++        title: String(item.title || "YouTube video"),
++        url: `https://www.youtube.com${item.url}`,
++        content: bits.join(" · "),
++        thumbnail: typeof item.thumbnail === "string" ? item.thumbnail : null,
++        credit: "YouTube",
++      };
++    });
++}
++
++function invidiousRows(payload) {
++  const rows = Array.isArray(payload) ? payload : [];
++  return rows
++    .filter((item) => typeof item?.videoId === "string")
++    .map((item) => {
++      const bits = [];
++      if (item.author) bits.push(String(item.author));
++      if (Number.isFinite(item.lengthSeconds) && item.lengthSeconds > 0) bits.push(`${Math.max(1, Math.round(item.lengthSeconds / 60))} min`);
++      if (Number.isFinite(item.viewCount) && item.viewCount > 0) bits.push(`${Math.round(item.viewCount / 1000)}K views`);
++      return {
++        title: String(item.title || "YouTube video"),
++        url: `https://www.youtube.com/watch?v=${item.videoId}`,
++        content: bits.join(" · "),
++        thumbnail: item.videoThumbnails?.find((t) => typeof t?.url === "string")?.url || null,
++        credit: "YouTube",
++      };
++    });
++}
++
++async function youtube(fetchImpl, query, cursor) {
++  const remembered = cursor ? parseTubeCursor(cursor) : { index: -1, token: "" };
++  for (let index = Math.max(0, remembered.index); index < TUBE_SOURCES.length; index++) {
++    const source = TUBE_SOURCES[index];
++    const continueToken = remembered.index === index ? remembered.token : "";
++    const params = source.kind === "piped"
++      ? `search?q=${encodeURIComponent(query)}&filter=videos${continueToken ? `&nextpage=${encodeURIComponent(continueToken)}` : ""}`
++      : `api/v1/search?q=${encodeURIComponent(query)}&type=video`;
++    let payload;
++    try {
++      payload = await getJSON(fetchImpl, `${source.host}/${params}`, 6000);
++    } catch {
++      continue;
++    }
++    const rows = source.kind === "piped" ? pipedRows(payload) : invidiousRows(payload);
++    if (!rows.length) continue;
++    const pageToken = source.kind === "piped" && typeof payload?.nextpage === "string" ? payload.nextpage : "";
++    return {
++      results: rows,
++      overview: [],
++      nextCursor: pageToken ? JSON.stringify({ i: index, p: pageToken }) : null,
++      notice: "Hosted demo — live YouTube results via the community Piped network. The installed Sreon app searches more sources.",
++      elapsed: 0,
++      cached: false,
++    };
++  }
++  throw new Error("all tube sources unavailable");
++}
++
++function parseWebCursor(cursor) {
++  try {
++    const parsed = JSON.parse(cursor);
++    const offset = Number(parsed?.w ?? parsed?.c ?? 0);
++    if (Number.isInteger(offset) && offset >= 0 && offset <= 100000) return offset;
++  } catch {}
++  return 0;
++}
++
++async function search(fetchImpl, q, category = "web", cursor = null) {
++  const query = String(q || "").trim();
++  if (!query) throw new Error("Type something to search.");
++  if (query.length > 500) throw new Error("Use up to 500 characters for a search.");
++  const started = Date.now();
++  try {
++    let data;
++    if (category === "videos") {
++      try {
++        data = await youtube(fetchImpl, query, cursor);
++      } catch {
++        data = await commonsMedia(fetchImpl, query, "videos", parseWebCursor(cursor));
++      }
++    } else if (category === "images" || category === "photos") {
++      data = await commonsMedia(fetchImpl, query, category, parseWebCursor(cursor));
++    } else {
++      data = await wikiWeb(fetchImpl, query, parseWebCursor(cursor));
++    }
++    return { ...data, elapsed: (Date.now() - started) / 1000 };
++  } catch (error) {
++    if (error.message === "unreachable" || error.message === "unreadable" || error.message === "all tube sources unavailable") {
++      throw new Error("Live sources are unreachable right now. Check your connection and try again.");
++    }
++    throw error;
++  }
++}
++
++export function createRuntime({ fetchImpl = (...args) => fetch(...args) } = {}) {
++  return {
++    isNative: false,
++    externalLinks: true,
++    search: (q, category, cursor) => search(fetchImpl, q, category, cursor),
++    openPage: (url) => {
++      window.open(url, "_blank", "noopener");
++      return Promise.resolve();
++    },
++    navigate: () => Promise.resolve(),
++  };
++}
++
++globalThis.SreonSiteRuntime = { createRuntime };
+diff --git a/site/assets/site.css b/site/assets/site.css
+index bb7e4f0..1eb15c2 100644
+--- a/site/assets/site.css
++++ b/site/assets/site.css
+@@ -2,3 +2,4 @@
+ :root{--bg:#f8f6f0;--ink:#282335;--muted:#706b77;--purple:#68508e;--line:#ded9e4;--panel:#fffdf9;--wash:#ede8f2;--field:#f7f4fa;color-scheme:light}html[data-theme=dark]{--bg:#19171e;--ink:#eee8f4;--muted:#b4aabc;--purple:#c3a7ed;--line:#39313f;--panel:#211d28;--wash:#26202f;--field:#19151f;color-scheme:dark}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:35px}body{margin:0;background:var(--bg);color:var(--ink);font-family:DM,Arial,sans-serif;font-size:15px;line-height:1.7}a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}button,a,input,textarea,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--purple);outline-offset:5px}button{color:inherit}img{max-width:100%;display:block}h1,h2,h3,p,figure{margin:0}h1,h2{font-weight:400;letter-spacing:-.045em;line-height:1.05}h1{font-size:clamp(48px,5.3vw,78px)}h2{font-size:clamp(40px,4.1vw,60px)}h3{font-weight:500;line-height:1.4}em{font-family:Instrument,Georgia,serif;font-weight:400;color:var(--purple)}.wrap{width:min(1160px,calc(100% - 88px));margin-inline:auto}.header{height:104px;display:flex;align-items:center;gap:44px}.brand{display:inline-flex;align-items:center;gap:10px;font-size:25px;font-weight:500;letter-spacing:-1px}.brand-period{color:var(--purple)}.brand .brand-period{margin-left:-10px}.header nav{display:flex;gap:32px;margin-left:auto;font-size:13px}.header nav a:hover{color:var(--purple)}.theme{border:1px solid var(--line);border-radius:50%;background:transparent;width:37px;height:37px;font-size:21px}.hero{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:50px;padding-block:53px 92px}.eyebrow{font-size:10px;letter-spacing:.16em;font-weight:500;color:var(--muted);margin-bottom:26px;display:flex;align-items:center;gap:9px}.small-dot{width:6px;height:6px;border-radius:50%;background:var(--purple)}.lede{color:var(--muted);margin-block:28px;line-height:1.8;font-size:17px}.button{display:inline-flex;align-items:center;justify-content:space-between;gap:38px;background:var(--purple);color:var(--bg);padding:14px 22px;border-radius:7px;font-size:13px}.button:hover{filter:brightness(1.12)}.hero-foot{margin-top:16px;font-size:11px;color:var(--muted)}.hero-photo{position:relative;height:510px;border-radius:110px 8px 8px 8px;overflow:hidden;background:#d6c9da}.hero-photo>img{height:100%;width:100%;object-fit:cover;object-position:62% center}.hero-photo figcaption{position:absolute;inset:auto 24px 23px;display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#fff;text-shadow:0 1px 4px #372744}.hero-photo figcaption span:last-child{font-size:9px;letter-spacing:.14em}.intro{padding-block:60px 88px;border-top:1px solid var(--line)}.intro>div:not(.principles){display:flex;justify-content:space-between;gap:45px;align-items:center}.intro>div>p{max-width:400px;color:var(--muted)}.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:50px;margin-top:65px}.principles article>span{font-size:10px;color:var(--purple)}.principles h3{margin-block:15px 12px}.principles p{font-size:13px;color:var(--muted);max-width:285px}.try-section{background:var(--wash);padding-block:80px}.try-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:center}.try-layout>div>p:not(.eyebrow){margin-top:26px;color:var(--muted)}.try-layout .fine{font-size:11px;max-width:270px}.search-window{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);box-shadow:0 14px 35px #31243a08}.window-bar{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid var(--line);color:var(--muted);font:10px monospace}.window-dots{letter-spacing:3px;font-size:9px;color:var(--line)}.search-inner{padding:35px 28px 22px}.search-inner>img{margin:0 auto 12px}.search-inner>h3{text-align:center;font-size:24px;letter-spacing:-.04em;margin-bottom:23px}.search-input{display:flex;align-items:center;background:var(--field);border:1px solid var(--line);border-radius:7px;padding:6px 6px 6px 14px}.search-input:focus-within{border-color:var(--purple)}.search-input input{flex:1;min-width:0;border:0;background:transparent;padding:9px 0;font-size:12px;color:var(--ink);outline:none}.search-input button{width:34px;height:34px;border:0;background:var(--purple);color:var(--bg);border-radius:5px;font-size:19px}.suggestions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.suggestions button{border:1px solid var(--line);border-radius:5px;background:transparent;font-size:10px;padding:5px 8px}.suggestions button:hover{background:var(--wash)}.search-status{font-size:11px;color:var(--muted);margin-top:22px}.search-status[data-error=true]{color:#b4475c}.result{padding-block:17px;border-top:1px solid var(--line);margin-top:15px;overflow-wrap:anywhere}.result a{color:var(--purple);font-size:17px;font-weight:500;display:block}.result a:hover{text-decoration:underline}.result small{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}.result p{font-size:12px;margin-top:6px}.text-button{background:none;border:0;color:var(--purple);padding:0;font-size:13px;text-decoration:underline;text-underline-offset:5px}#more{margin-top:15px}.privacy{display:grid;grid-template-columns:1fr 1fr;gap:80px;padding-block:105px}.privacy-address{font:12px monospace;letter-spacing:0;display:block}.quiet-colon{color:inherit;text-decoration:none;cursor:default}.quiet-colon:focus-visible{outline-offset:2px}.privacy h2{font-size:clamp(34px,3.5vw,49px)}.privacy>div>p:last-child{color:var(--muted);font-size:14px;margin-top:25px}.privacy-list article{display:flex;gap:20px;padding:23px 0;border-bottom:1px solid var(--line)}.privacy-list article:first-child{padding-top:0}.privacy-list article>span{font-size:10px;color:var(--purple);padding-top:4px}.privacy-list h3{font-size:15px;margin-bottom:8px}.privacy-list p{font-size:12px;color:var(--muted)}.closing{text-align:center;border-top:1px solid var(--line);padding-block:75px 90px}.closing .eyebrow{justify-content:center}.closing .text-button{display:inline-block;margin-top:27px}.footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-block:26px;font-size:11px;color:var(--muted)}.footer .brand{font-size:18px;color:var(--ink)}.sr-only,.skip:not(:focus){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.skip:focus{position:absolute;z-index:10;padding:15px;background:var(--panel)}[hidden]{display:none!important}@media(max-width:850px){.wrap{width:calc(100% - 44px)}.hero{gap:25px}.hero-photo{height:430px}.try-layout{gap:30px;grid-template-columns:.8fr 1.2fr}.privacy{gap:35px}.principles{gap:25px}}@media(max-width:600px){.header{height:80px;gap:16px}.header nav{gap:16px;font-size:11px}.brand{font-size:22px;gap:7px}.brand img{width:28px;height:28px}.theme{width:30px;height:30px;flex-shrink:0}.hero{grid-template-columns:1fr;padding-block:32px 52px}.hero-photo{height:330px;margin-top:14px;border-top-left-radius:80px}.hero h1{font-size:57px}.eyebrow{font-size:9px}.intro{padding-block:42px}.intro>div:not(.principles){display:block}.intro>div>p{margin-top:24px;font-size:14px}.principles{grid-template-columns:1fr;gap:26px;margin-top:36px}.principles article{border-top:1px solid var(--line);padding-top:20px}.principles p{max-width:none}.try-layout,.privacy{grid-template-columns:1fr;gap:32px}.try-section{padding-block:45px}.try-layout .fine{max-width:350px}.search-inner{padding:27px 18px 20px}.privacy{padding-block:55px}.closing{padding-block:48px}.footer{flex-wrap:wrap;gap:20px}.footer>span{display:none}.footer>a:last-child{font-size:10px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+ .hero-photo:before{content:'A QUIETER PERSPECTIVE';position:absolute;z-index:1;top:30px;right:26px;color:#f8f4fa;font-size:9px;letter-spacing:.2em;text-shadow:0 1px 6px #4d3b5c}.hero-photo:after{content:'↗';position:absolute;top:59px;right:26px;width:37px;height:37px;display:grid;place-items:center;border:1px solid #ffffff77;border-radius:50%;color:white;font-size:19px}.hero-photo>img{transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}.hero-photo:hover>img{transform:scale(1.035)}.hero-copy .button{transition:transform .2s,box-shadow .2s}.hero-copy .button:hover{transform:translateY(-2px);box-shadow:0 8px 20px #68508e24}.hero-copy{animation:arrive .7s ease both}.hero-photo{animation:arrive 1s .08s ease both}.principles article{position:relative}.principles article>span{display:inline-block;padding:4px 0;border-bottom:1px solid var(--purple)}.privacy-list article>span{font-family:Instrument,serif;font-size:23px;line-height:1.4}.closing h2{font-family:Instrument,serif;font-size:clamp(58px,6.5vw,92px);letter-spacing:-.035em}.closing{position:relative}.closing:before{content:'✳';display:block;color:var(--purple);font-size:35px;margin-bottom:24px}@keyframes arrive{from{transform:translateY(8px)}to{transform:translateY(0)}}
+ .discover{padding-block:5px 85px}.section-top{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:37px}.section-top>p{font-size:13px;color:var(--muted);padding-bottom:6px}.discovery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:25px}.discovery-card{border:0;padding:0;text-align:left;background:none;color:var(--ink)}.discovery-image{height:240px;border-radius:9px;overflow:hidden;position:relative;background:var(--wash)}.discovery-image img{height:100%;width:100%;object-fit:cover;transition:transform .5s}.discovery-image>span{position:absolute;bottom:17px;left:18px;color:#fff;font-size:9px;letter-spacing:.14em;text-shadow:0 1px 6px #262033}.discovery-card:hover img{transform:scale(1.04)}.discovery-card>div:not(.discovery-image){display:flex;justify-content:space-between;margin-top:17px;gap:12px}.discovery-card h3{font-size:17px;font-weight:500;letter-spacing:-.025em}.discovery-card>p{font-size:11px;color:var(--muted);margin-top:6px}.engine{display:grid;grid-template-columns:1fr 1fr;gap:85px;padding-block:85px;border-bottom:1px solid var(--line)}.engine>div>p:last-child{font-size:13px;max-width:360px;margin-top:24px;color:var(--muted)}.engine-steps{margin:0;padding:0;list-style:none}.engine-steps li{display:flex;gap:20px;padding-bottom:28px;position:relative}.engine-steps li>span{flex-shrink:0;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:10px;color:var(--purple);background:var(--bg);z-index:1}.engine-steps li:not(:last-child):after{content:'';position:absolute;left:16px;top:32px;bottom:0;border-left:1px solid var(--line)}.engine-steps h3{font-size:15px;padding-top:4px}.engine-steps p{font-size:12px;color:var(--muted);margin-top:9px}.questions{display:grid;grid-template-columns:1fr 1fr;gap:80px;border-top:1px solid var(--line);padding-block:70px 85px}.questions h2{font-size:45px}.questions details{border-bottom:1px solid var(--line)}.questions summary{padding:19px 25px 19px 0;cursor:pointer;font-size:13px;list-style:none;position:relative}.questions summary:after{content:'+';position:absolute;right:0;color:var(--purple);font-size:19px;top:12px}.questions details[open] summary:after{content:'−'}.questions details p{font-size:12px;color:var(--muted);padding-bottom:20px}.questions summary::-webkit-details-marker{display:none}@media(max-width:850px){.discovery-grid{gap:17px}.discovery-image{height:210px}.engine,.questions{gap:35px}}@media(max-width:600px){.section-top{display:block}.section-top>p{margin-top:23px}.discover{padding-bottom:45px}.discovery-grid{grid-template-columns:1fr;gap:28px}.discovery-image{height:240px}.discovery-card h3{font-size:19px}.engine,.questions{grid-template-columns:1fr;padding-block:45px}.engine{gap:35px}.questions{gap:15px}.questions h2{font-size:39px}}
++.kinds{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.kinds button{border:1px solid var(--line);border-radius:6px;background:transparent;font-size:10px;padding:5px 10px;color:var(--muted)}.kinds button[aria-pressed=true]{background:var(--purple);border-color:var(--purple);color:var(--bg)}.kinds button:hover:not([aria-pressed=true]){background:var(--wash)}.result .thumb{margin-top:10px;border-radius:8px;max-height:150px;width:auto;max-width:100%}
+diff --git a/site/assets/site.js b/site/assets/site.js
+index 9cdf20f..713a428 100644
+--- a/site/assets/site.js
++++ b/site/assets/site.js
+@@ -13,10 +13,63 @@ const results = document.querySelector('#results');
+ const status = document.querySelector('#search-status');
+ const submit = document.querySelector('#search-submit');
+ const more = document.querySelector('#more');
++let kind = 'web';
+ let cursor = null;
+ let lastQuery = '';
+ let request = null;
+ let sequence = 0;
++let localOnly = false;
++
++function localRuntime() { return window.SreonSiteRuntime?.createRuntime(); }
++
++function safeLink(url) {
++  try {
++    const parsed = new URL(url);
++    if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password) return null;
++    return parsed;
++  } catch { return null; }
++}
++
++function render(item) {
++  const article = document.createElement('article');
++  article.className = 'result';
++  const source = document.createElement('small');
++  source.textContent = item.host;
++  const link = document.createElement('a');
++  link.href = item.url;
++  link.textContent = item.title || item.host;
++  link.target = '_blank';
++  link.rel = 'noreferrer noopener';
++  const excerpt = document.createElement('p');
++  excerpt.textContent = item.content || '';
++  article.append(source, link, excerpt);
++  if (item.thumbnail) {
++    const image = document.createElement('img');
++    image.className = 'thumb';
++    image.loading = 'lazy';
++    image.referrerPolicy = 'no-referrer';
++    image.alt = '';
++    image.src = item.thumbnail;
++    image.addEventListener('error', () => image.remove(), { once: true });
++    article.append(image);
++  }
++  return article;
++}
++
++function renderEngineRow(item) {
++  const parsed = safeLink(item.url);
++  if (!parsed || !item.title) return 0;
++  results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title, content: item.content || '', thumbnail: null }));
++  return 1;
++}
++
++function renderLocalRow(item) {
++  const parsed = safeLink(item.url);
++  if (!parsed) return 0;
++  results.append(render({ host: parsed.hostname, url: parsed.href, title: item.title || parsed.hostname, content: item.content || '', thumbnail: item.thumbnail || null }));
++  return 1;
++}
++
+ async function search(append = false) {
+   const q = append ? lastQuery : query.value.trim();
+   if (!q) { query.focus(); return; }
+@@ -32,44 +85,80 @@ async function search(append = false) {
+   status.dataset.error = 'false';
+   status.textContent = 'Searching the web…';
+   try {
++    if (localOnly) throw new Error('use-local');
+     const endpoint = document.querySelector('meta[name="sreon-search-endpoint"]').content;
+-    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, category: 'web', cursor: append ? cursor : null }), credentials: 'omit', signal: controller.signal, referrerPolicy: 'no-referrer' });
++    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, category: kind, cursor: append ? cursor : null }), credentials: 'omit', signal: controller.signal, referrerPolicy: 'no-referrer' });
+     if (!response.ok) {
+       const failure = await response.json().catch(() => ({}));
+       if (response.status === 429) throw new Error('A few too many searches. Please wait a minute and try again.');
+       if (failure.code === 'SOURCE_UNAVAILABLE') throw new Error('The Rust engine is running, but its search sources could not be reached. Please retry shortly.');
+-      if (failure.code === 'BACKEND_NOT_READY' || response.status === 404) throw new Error('The website search backend is not connected yet.');
+-      throw new Error('Search is temporarily unavailable. Please try again.');
++      throw new Error('backend-unavailable');
+     }
+     const data = await response.json();
+     if (!Array.isArray(data.results)) throw new Error('The search service returned an unexpected response.');
+     if (id !== sequence) return;
+     let added = 0;
+-    for (const item of data.results) {
+-      let url;
+-      try { url = new URL(item.url); } catch { continue; }
+-      if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) continue;
+-      const article = document.createElement('article'); article.className = 'result';
+-      const source = document.createElement('small'); source.textContent = url.hostname;
+-      const link = document.createElement('a'); link.href = url.href; link.textContent = item.title || url.hostname; link.rel = 'noreferrer';
+-      const excerpt = document.createElement('p'); excerpt.textContent = item.content || '';
+-      article.append(source, link, excerpt); results.append(article); added++;
+-    }
++    for (const item of data.results) added += renderEngineRow(item);
+     cursor = typeof data.nextCursor === 'string' ? data.nextCursor : null;
+     more.hidden = !cursor;
+     status.textContent = added ? `${results.children.length} results for “${q}”.${data.cached ? ' From the engine’s short-lived cache.' : ''}${data.notice ? ' ' + data.notice : ''}` : data.notice || 'No results this time. Try another search.';
+   } catch (error) {
+     if (id !== sequence) return;
+-    status.dataset.error = 'true';
+-    status.textContent = error.name === 'AbortError' ? 'The search took too long. Please try again.' : error.message;
+-    if (append && cursor) more.hidden = false;
++    if (error.message === 'backend-unavailable' || error.message === 'use-local' || error.name === 'TypeError') {
++      localOnly = true;
++      status.dataset.error = 'false';
++      status.textContent = 'Using the in-browser demo search…';
++      await searchLocal(q, append, id);
++    } else {
++      status.dataset.error = 'true';
++      status.textContent = error.name === 'AbortError' ? 'The search took too long. Please try again.' : error.message;
++      if (append && cursor) more.hidden = false;
++    }
+   } finally {
+     clearTimeout(timer);
+     if (id === sequence) { submit.disabled = false; results.setAttribute('aria-busy', 'false'); }
+   }
+ }
++
++async function searchLocal(q, append, id) {
++  const runtime = localRuntime();
++  if (!runtime) {
++    status.dataset.error = 'true';
++    status.textContent = 'Search is unavailable in this browser.';
++    return;
++  }
++  try {
++    const data = await runtime.search(q, kind, append ? cursor : null);
++    if (id !== sequence) return;
++    if (!append) results.replaceChildren();
++    let added = 0;
++    for (const item of data.results) added += renderLocalRow(item);
++    cursor = typeof data.nextCursor === 'string' ? data.nextCursor : null;
++    more.hidden = !cursor;
++    status.dataset.error = 'false';
++    status.textContent = added ? `${results.children.length} results for “${q}”. ${data.notice || ''}` : `${data.notice || 'No results this time. Try another search.'}`;
++  } catch (error) {
++    if (id !== sequence) return;
++    status.dataset.error = 'true';
++    status.textContent = error.message || 'Search failed. Please try again.';
++  }
++}
++
+ form.addEventListener('submit', (event) => { event.preventDefault(); search(); });
+-document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => { query.value = button.dataset.query; document.querySelector('#try').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); search(); }));
++document.querySelectorAll('.kinds button').forEach((chip) => chip.addEventListener('click', () => {
++  kind = chip.dataset.kind;
++  document.querySelectorAll('.kinds button').forEach((item) => item.setAttribute('aria-pressed', String(item === chip)));
++  if (query.value.trim()) search();
++}));
++document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => {
++  query.value = button.dataset.query;
++  if (button.dataset.kind) {
++    kind = button.dataset.kind;
++    document.querySelectorAll('.kinds button').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.kind === kind)));
++  }
++  document.querySelector('#try').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
++  search();
++}));
+ more.addEventListener('click', () => search(true));
+ 
+ async function checkBackend() {
+@@ -79,11 +168,11 @@ async function checkBackend() {
+     endpoint.search = '';
+     const response = await fetch(endpoint, { credentials:'omit', referrerPolicy:'no-referrer', signal:AbortSignal.timeout(12000) });
+     const data = await response.json();
+-    if (sequence) return;
++    if (sequence || localOnly) return;
+     if (!response.ok || !data.ready || data.engine !== 'rust') throw new Error('Backend unavailable');
+     status.textContent = 'Connected to the Rust search engine. What are you curious about?';
+   } catch {
+-    if (!sequence) { status.dataset.error = 'true'; status.textContent = 'The website search backend is not connected yet.'; }
++    if (!sequence && !localOnly) { status.dataset.error = 'false'; status.textContent = 'Try a search below — this hosted page uses its in-browser demo search.'; }
+   }
+ }
+ checkBackend();
+diff --git a/site/tests/runtime.test.mjs b/site/tests/runtime.test.mjs
+new file mode 100644
+index 0000000..0a19258
+--- /dev/null
++++ b/site/tests/runtime.test.mjs
+@@ -0,0 +1,132 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++
++globalThis.window = globalThis;
++const { createRuntime } = await import('../assets/runtime.js');
++
++const WIKI_PAGE = {
++  query: {
++    searchinfo: { totalhits: 60 },
++    search: [
++      { title: 'YouTube', snippet: 'The <span class="searchmatch">video</span> platform &amp; more' },
++      { title: 'History of online video', snippet: 'A &#39;clip&#39; history' },
++    ],
++  },
++};
++const PIPED_PAGE = {
++  items: [
++    { url: '/watch?v=abc123', title: 'A video about birds', thumbnail: 'https://pipedproxy.example/bird.jpg', uploaderName: 'Bird Channel', duration: 214, views: 250000 },
++    { url: 'https://example.com/not-a-watch', title: 'skip me' },
++  ],
++  nextpage: 'TOKEN-1',
++};
++const INVIDIOUS_PAGE = [
++  { videoId: 'inv456', title: 'Invidious bird video', author: 'Someone', lengthSeconds: 95, viewCount: 4200, videoThumbnails: [{ url: 'https://inv.example/thumb.jpg' }] },
++];
++const COMMONS_PAGE = (name, mime) => ({
++  title: `File:${name}`,
++  imageinfo: [{
++    descriptionurl: `https://commons.wikimedia.org/wiki/File:${name}`,
++    thumburl: `https://upload.wikimedia.org/thumb/${name}/340px-${name}`,
++    mime,
++    extmetadata: { Artist: { value: '<a href="#">Ada</a>' }, LicenseShortName: { value: 'CC BY-SA 4.0' }, ImageDescription: { value: 'A &quot;photo&quot;' } },
++  }],
++});
++
++function responder(routes) {
++  return async (url) => {
++    const target = String(url);
++    for (const [match, body] of routes) {
++      if (target.includes(match)) {
++        if (typeof body === 'number') return { ok: false, status: body, json: async () => ({}) };
++        return { ok: true, status: 200, json: async () => (typeof body === 'function' ? body(target) : body) };
++      }
++    }
++    throw new Error('no route for ' + target);
++  };
++}
++
++test('web search uses Wikipedia with snippet text, overview-shaped results, and a cursor', async () => {
++  const calls = [];
++  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return responder([['en.wikipedia.org', WIKI_PAGE]])(url); } });
++  const data = await runtime.search('video', 'web', null);
++  assert.match(calls[0], /en\.wikipedia\.org/);
++  assert.match(calls[0], /origin=\*/);
++  assert.equal(data.results[0].title, 'YouTube');
++  assert.equal(data.results[0].url, 'https://en.wikipedia.org/wiki/YouTube');
++  assert.equal(data.results[0].content, 'The video platform & more');
++  assert.equal(data.overview.length, 2);
++  assert.deepEqual(JSON.parse(data.nextCursor), { w: 2 });
++  assert.match(data.notice, /Wikipedia/);
++});
++
++test('YouTube search returns real youtube.com watch links through Piped, then continues on the same host', async () => {
++  const calls = [];
++  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return responder([['pipedapi.kavin.rocks', PIPED_PAGE]])(url); } });
++  const data = await runtime.search('birds', 'videos', null);
++  assert.equal(data.results.length, 1);
++  assert.equal(data.results[0].url, 'https://www.youtube.com/watch?v=abc123');
++  assert.equal(data.results[0].title, 'A video about birds');
++  assert.match(data.results[0].content, /Bird Channel/);
++  assert.match(data.results[0].content, /4 min/);
++  assert.match(data.results[0].content, /250K views/);
++  assert.equal(data.results[0].credit, 'YouTube');
++  assert.equal(data.results[0].thumbnail, 'https://pipedproxy.example/bird.jpg');
++  assert.deepEqual(JSON.parse(data.nextCursor), { i: 0, p: 'TOKEN-1' });
++  assert.match(data.notice, /Piped/);
++  const second = await runtime.search('birds', 'videos', data.nextCursor);
++  assert.match(calls[1], /pipedapi\.kavin\.rocks\/search\?q=birds&filter=videos&nextpage=TOKEN-1/);
++  assert.equal(second.results.length, 1);
++});
++
++test('YouTube search falls back to the next Piped host, then to Invidious, then to Commons', async () => {
++  const calls = [];
++  const runtime = createRuntime({ fetchImpl: async (url) => {
++    calls.push(String(url));
++    if (String(url).includes('invidious.nerdvpn.de')) return responder([['invidious.nerdvpn.de', INVIDIOUS_PAGE]])(url);
++    if (String(url).includes('commons.wikimedia.org')) return responder([['commons.wikimedia.org', { query: { pages: { v: COMMONS_PAGE('Clip.webm', 'video/webm') } }, continue: { gsroffset: 30 } }]])(url);
++    throw new Error('down');
++  } });
++  const data = await runtime.search('birds', 'videos', null);
++  assert.ok(calls.some((entry) => entry.includes('pipedapi.kavin.rocks')));
++  assert.ok(calls.some((entry) => entry.includes('pipedapi.adminforge.de')));
++  assert.equal(data.results[0].url, 'https://www.youtube.com/watch?v=inv456');
++  assert.match(data.notice, /Piped/);
++  const commonsOnly = createRuntime({ fetchImpl: async (url) => { if (String(url).includes('commons.wikimedia.org')) return responder([['commons', { query: { pages: { v: COMMONS_PAGE('Clip.webm', 'video/webm') } }, continue: { gsroffset: 30 } }]])(url); throw new Error('down'); } });
++  const fallback = await commonsOnly.search('birds', 'videos', null);
++  assert.equal(fallback.results[0].title, 'Clip.webm');
++  assert.deepEqual(JSON.parse(fallback.nextCursor), { c: 30 });
++  assert.match(fallback.notice, /Commons/);
++});
++
++test('images and photos search Commons, filter photos to JPEG, and keep credits', async () => {
++  const calls = [];
++  const body = { query: { pages: { a: COMMONS_PAGE('Coast.jpg', 'image/jpeg'), b: COMMONS_PAGE('Diagram.png', 'image/png') } }, continue: { gsroffset: 30 } };
++  const runtime = createRuntime({ fetchImpl: async (url) => { calls.push(String(url)); return responder([['commons.wikimedia.org', body]])(url); } });
++  const images = await runtime.search('coast', 'images', null);
++  assert.equal(images.results.length, 2);
++  assert.match(calls[0], /filetype%3Abitmap/);
++  assert.equal(images.results[0].credit, 'Ada · CC BY-SA 4.0');
++  assert.equal(images.results[0].content, 'A "photo"');
++  const photos = await runtime.search('coast', 'photos', null);
++  assert.match(calls[1], /filemime%3Aimage%2Fjpeg/);
++  assert.equal(photos.results.length, 1);
++  assert.equal(photos.results[0].title, 'Coast.jpg');
++});
++
++test('input validation and the open contract hold', async () => {
++  const runtime = createRuntime({ fetchImpl: async () => { throw new Error('down'); } });
++  await assert.rejects(runtime.search(''), /Type something/);
++  await assert.rejects(runtime.search('x'.repeat(501)), /500 characters/);
++  let opened = '';
++  window.open = (url) => { opened = url; return {}; };
++  await runtime.openPage('https://www.youtube.com/watch?v=abc123');
++  assert.equal(opened, 'https://www.youtube.com/watch?v=abc123');
++  assert.equal(runtime.isNative, false);
++  assert.equal(runtime.externalLinks, true);
++  const working = createRuntime({ fetchImpl: responder([['en.wikipedia.org', WIKI_PAGE]]) });
++  const brokenCursor = await working.search('video', 'web', 'not-json');
++  assert.equal(typeof brokenCursor.elapsed, 'number');
++  const offline = createRuntime({ fetchImpl: async () => { throw new Error('down'); } });
++  await assert.rejects(offline.search('video', 'web'), /unreachable right now/);
++});
+diff --git a/site/tests/try-panel.test.mjs b/site/tests/try-panel.test.mjs
+new file mode 100644
+index 0000000..a05a29d
+--- /dev/null
++++ b/site/tests/try-panel.test.mjs
+@@ -0,0 +1,142 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { join, dirname } from 'node:path';
++import { fileURLToPath } from 'node:url';
++let JSDOM;
++try {
++  ({ JSDOM } = await import('jsdom'));
++} catch {
++  console.log('# skip: this DOM test needs the jsdom dev dependency (npm ci)');
++}
++
++const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
++
++const WIKI_PAGE = {
++  query: {
++    searchinfo: { totalhits: 12 },
++    search: [{ title: 'Quiet places', snippet: 'A guide to <span class="searchmatch">quiet</span> places' }],
++  },
++};
++const PIPED_PAGE = {
++  items: [{ url: '/watch?v=lofi123', title: 'lo-fi study beats', thumbnail: 'https://pipedproxy.example/lofi.jpg', uploaderName: 'Calm Channel', duration: 182, views: 98000 }],
++  nextpage: 'TOK',
++};
++
++function fixtures(target) {
++  const url = String(target);
++  if (url.includes('/api/search')) return { ok: false, status: 404, json: async () => ({}) };
++  if (url.includes('/api/health')) return { ok: false, status: 404, json: async () => ({}) };
++  if (url.includes('pipedapi.kavin.rocks')) return { ok: true, status: 200, json: async () => PIPED_PAGE };
++  if (url.includes('en.wikipedia.org')) return { ok: true, status: 200, json: async () => WIKI_PAGE };
++  throw new Error('no fixture for ' + url);
++}
++
++async function boot() {
++  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
++  const dom = new JSDOM(html, {
++    runScripts: 'outside-only',
++    url: 'http://localhost/',
++    pretendToBeVisual: true,
++    beforeParse(window) {
++      window.fetch = (url, init) => Promise.resolve(fixtures(url, init));
++      window.open = (url) => { window.__opened = window.__opened || []; window.__opened.push(url); return { focus() {} }; };
++      window.__runtimeReady = import('file://' + join(ROOT, 'site/assets/runtime.js')).then((module) => {
++        window.SreonSiteRuntime = { createRuntime: () => module.createRuntime({ fetchImpl: (url, init) => window.fetch(url, init) }) };
++      });
++    },
++  });
++  await dom.window.__runtimeReady;
++  dom.window.eval(readFileSync(join(ROOT, 'site/assets/theme.js'), 'utf8'));
++  dom.window.eval(readFileSync(join(ROOT, 'site/assets/site.js'), 'utf8'));
++  await new Promise((r) => setTimeout(r, 30));
++  return dom;
++}
++
++async function waitFor(check, label) {
++  const limit = Date.now() + 6000;
++  for (;;) {
++    const value = check();
++    if (value) return value;
++    if (Date.now() > limit) throw new Error('timeout waiting for ' + label + ' — status said: ' + document.getElementById('search-status').textContent);
++    await new Promise((r) => setTimeout(r, 25));
++  }
++}
++
++let document;
++
++test('on the real opensreon.com page the Try panel searches YouTube and All with no backend', { skip: !JSDOM }, async () => {
++  const dom = await boot();
++  document = dom.window.document;
++
++  assert.match(
++    document.getElementById('search-status').textContent,
++    /in-browser demo|curious/i,
++    'the panel greets the visitor with the demo notice when the backend is absent',
++  );
++
++  document.querySelector('.kinds button[data-kind="videos"]').dispatchEvent(new dom.window.Event('click', { bubbles: true }));
++  document.getElementById('query').value = 'lo-fi beats';
++  document.getElementById('search-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
++  await waitFor(() => document.querySelector('#results article.result a'), 'YouTube results');
++  const video = document.querySelector('#results article.result a');
++  assert.equal(video.href, 'https://www.youtube.com/watch?v=lofi123');
++  assert.equal(video.target, '_blank');
++  assert.match(video.rel, /noopener/);
++  assert.match(document.querySelector('#results article.result small').textContent, /youtube\.com/);
++  assert.match(document.getElementById('search-status').textContent, /Piped/);
++  assert.ok(document.querySelector('#results article.result img.thumb'), 'video thumbnail renders');
++
++  document.querySelector('.kinds button[data-kind="web"]').dispatchEvent(new dom.window.Event('click', { bubbles: true }));
++  document.getElementById('query').value = 'quiet places';
++  document.getElementById('search-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
++  await waitFor(() => (document.querySelector('#results article.result a') || {}).href?.includes('wikipedia'), 'web results');
++  const web = document.querySelector('#results article.result a');
++  assert.match(web.href, /en\.wikipedia\.org\/wiki/);
++  assert.equal(web.target, '_blank');
++  dom.window.close();
++});
++
++test('with a connected Rust engine the panel uses /api/search and skips the demo runtime', { skip: !JSDOM }, async () => {
++  const ENGINE = { results: [{ title: 'Engine result', url: 'https://example.org/engine', content: 'From the Rust engine' }], nextCursor: null, notice: '', cached: false };
++  const seen = [];
++  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
++  const dom = new JSDOM(html, {
++    runScripts: 'outside-only',
++    url: 'http://localhost/',
++    pretendToBeVisual: true,
++    beforeParse(window) {
++      window.fetch = (url) => {
++        seen.push(String(url));
++        if (String(url).includes('/api/search')) return Promise.resolve({ ok: true, status: 200, json: async () => ENGINE });
++        if (String(url).includes('/api/health')) return Promise.resolve({ ok: true, status: 200, json: async () => ({ ready: true, engine: 'rust' }) });
++        throw new Error('unexpected fetch ' + url);
++      };
++      window.__runtimeReady = import('file://' + join(ROOT, 'site/assets/runtime.js')).then((module) => {
++        window.SreonSiteRuntime = { createRuntime: () => module.createRuntime({ fetchImpl: () => { throw new Error('demo runtime must not be used'); } }) };
++      });
++    },
++  });
++  await dom.window.__runtimeReady;
++  dom.window.eval(readFileSync(join(ROOT, 'site/assets/theme.js'), 'utf8'));
++  dom.window.eval(readFileSync(join(ROOT, 'site/assets/site.js'), 'utf8'));
++  document = dom.window.document;
++  await new Promise((r) => setTimeout(r, 40));
++  assert.match(document.getElementById('search-status').textContent, /Connected to the Rust search engine/);
++  document.getElementById('query').value = 'curiosity';
++  document.getElementById('search-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
++  const limit = Date.now() + 5000;
++  for (;;) {
++    const link = document.querySelector('#results article.result a');
++    if (link) {
++      assert.equal(link.href, 'https://example.org/engine');
++      assert.equal(link.target, '_blank');
++      assert.match(document.getElementById('search-status').textContent, /results for “curiosity”/);
++      assert.ok(seen.some((entry) => entry.includes('/api/search')), 'the engine endpoint was used');
++      break;
++    }
++    if (Date.now() > limit) throw new Error('engine results never rendered');
++    await new Promise((r) => setTimeout(r, 25));
++  }
++  dom.window.close();
++});
