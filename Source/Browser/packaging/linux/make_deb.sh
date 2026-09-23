@@ -45,6 +45,7 @@ Section: web
 Priority: optional
 Architecture: amd64
 Installed-Size: $installed_size
+Maintainer: Sreon <contact@opensreon.com>
 Depends: libgl1, libegl1, libxkbcommon0, libdbus-1-3, libfontconfig1, libglib2.0-0, libnss3, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libasound2, libxtst6, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-render-util0, libxcb-xinerama0, libxcb-cursor0
 Provides: web-browser
 Recommends: libqt6svg6
